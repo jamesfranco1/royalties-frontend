@@ -10,6 +10,7 @@ import { VersionedTransaction } from "@solana/web3.js";
 import { useToast } from "@/components/Toast";
 import { fetchAnyListing, buyRoyaltyListing, buyResaleListing, useRoyaltiesProgram, USDC_MINT, getConnection } from "@/lib/solana";
 import { getSolPriceForUsdc, createSwapTransaction, formatSol, checkSolBalance, isJupiterAvailable } from "@/lib/jupiter";
+import { fetchMetadataFromURI } from "@/lib/api";
 
 type PaymentMethod = "usdc" | "sol";
 
@@ -48,6 +49,12 @@ export default function ListingDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [txSignature, setTxSignature] = useState<string | null>(null);
+  const [metadata, setMetadata] = useState<{
+    name: string;
+    platform: string;
+    imageUrl: string;
+    description: string;
+  } | null>(null);
   
   // Payment method state
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("usdc");
@@ -142,6 +149,23 @@ export default function ListingDetailPage() {
     }
   }, [params.id]);
 
+  // Fetch metadata when listing loads
+  useEffect(() => {
+    async function loadMetadata() {
+      if (!listing?.metadataUri) return;
+      
+      try {
+        const meta = await fetchMetadataFromURI(listing.metadataUri);
+        console.log("Fetched metadata:", meta);
+        setMetadata(meta);
+      } catch (err) {
+        console.error("Failed to fetch metadata:", err);
+      }
+    }
+    
+    loadMetadata();
+  }, [listing?.metadataUri]);
+
   // Fetch SOL price when listing loads
   useEffect(() => {
     async function fetchSolPrice() {
@@ -191,16 +215,6 @@ export default function ListingDetailPage() {
     if (months > 0) return `${months} months`;
     const days = Math.floor(seconds / (24 * 60 * 60));
     return `${days} days`;
-  };
-
-  // Parse metadata URI for display
-  const parseMetadataUri = (uri: string): { source: string; work: string } => {
-    // Format: ipfs://source/work
-    const parts = uri.replace("ipfs://", "").split("/");
-    return {
-      source: parts[0] || "Unknown",
-      work: parts.slice(1).join("/") || "Unknown",
-    };
   };
 
   const handleBuy = () => {
@@ -408,7 +422,11 @@ export default function ListingDetailPage() {
     );
   }
 
-  const { source, work } = parseMetadataUri(listing.metadataUri);
+  // Use fetched metadata or fallback
+  const displayName = metadata?.name || 'Loading...';
+  const displayPlatform = metadata?.platform || 'Unknown';
+  const displayDescription = metadata?.description || '';
+  const displayImage = metadata?.imageUrl || '';
   const creatorShort = `${listing.creator.slice(0, 4)}...${listing.creator.slice(-4)}`;
 
   return (
@@ -444,16 +462,28 @@ export default function ListingDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Left: Listing Details */}
             <div className="lg:col-span-2 space-y-8">
+              {/* Listing Image */}
+              {displayImage && (
+                <div className="border border-black/20 overflow-hidden">
+                  <img 
+                    src={displayImage} 
+                    alt={displayName}
+                    className="w-full h-64 object-cover"
+                  />
+                </div>
+              )}
+
               {/* Creator/Seller Info */}
               <div>
                 <div className="flex items-center gap-4 mb-4">
                   <div className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl ${listing.isResale ? 'bg-purple-600' : 'bg-black'}`}>
-                    {source.charAt(0).toUpperCase()}
-                    </div>
+                    {displayPlatform.charAt(0).toUpperCase()}
+                  </div>
                   <div className="flex-1">
-                    <h2 className="text-3xl font-bold capitalize">{source}</h2>
+                    <p className="text-sm text-black/50 uppercase tracking-wider">{displayPlatform}</p>
+                    <h2 className="text-3xl font-bold">{displayName}</h2>
                     {listing.isResale && listing.seller ? (
-                      <div className="space-y-1">
+                      <div className="space-y-1 mt-1">
                         <p className="text-black/60 font-mono text-sm">
                           Seller: {listing.seller.slice(0, 4)}...{listing.seller.slice(-4)}
                         </p>
@@ -477,10 +507,12 @@ export default function ListingDetailPage() {
                         : 'border-black/30 text-black/60'
                     }`}>
                       {listing.status}
-                      </span>
+                    </span>
                   </div>
                 </div>
-                <p className="text-lg text-black/60">{work || listing.metadataUri}</p>
+                {displayDescription && (
+                  <p className="text-lg text-black/60">{displayDescription}</p>
+                )}
               </div>
 
               {/* Action buttons */}
