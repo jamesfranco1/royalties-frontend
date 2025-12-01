@@ -47,34 +47,34 @@ function parseListingAccount(pubkey: PublicKey, data: Buffer): ListingAccount | 
     const metadataUri = data.slice(offset, offset + uriLength).toString('utf8');
     offset += uriLength;
 
+    // percentageBps (u16 - 2 bytes)
+    const percentageBps = data.readUInt16LE(offset);
+    offset += 2;
+
+    // durationSeconds (u64 - 8 bytes)
+    const durationLow = data.readUInt32LE(offset);
+    const durationHigh = data.readUInt32LE(offset + 4);
+    const durationSeconds = (BigInt(durationHigh) << 32n) + BigInt(durationLow);
+    offset += 8;
+
+    // startTimestamp (i64 - 8 bytes)
+    const startTimestampLow = data.readUInt32LE(offset);
+    const startTimestampHigh = data.readUInt32LE(offset + 4);
+    const startTimestamp = (BigInt(startTimestampHigh) << 32n) + BigInt(startTimestampLow);
+    offset += 8;
+
     // price (u64 - 8 bytes)
     const priceLow = data.readUInt32LE(offset);
     const priceHigh = data.readUInt32LE(offset + 4);
     const price = (BigInt(priceHigh) << 32n) + BigInt(priceLow);
     offset += 8;
 
-    // percentageBps (u16 - 2 bytes)
-    const percentageBps = data.readUInt16LE(offset);
-    offset += 2;
-
-    // durationSeconds (i64 - 8 bytes)
-    const durationLow = data.readUInt32LE(offset);
-    const durationHigh = data.readUInt32LE(offset + 4);
-    const durationSeconds = (BigInt(durationHigh) << 32n) + BigInt(durationLow);
-    offset += 8;
-
-    // createdAt (i64 - 8 bytes)
-    const createdAtLow = data.readUInt32LE(offset);
-    const createdAtHigh = data.readUInt32LE(offset + 4);
-    const createdAt = (BigInt(createdAtHigh) << 32n) + BigInt(createdAtLow);
-    offset += 8;
-
     // resaleAllowed (bool - 1 byte)
     const resaleAllowed = data.readUInt8(offset) === 1;
     offset += 1;
 
-    // resaleRoyaltyBps (u16 - 2 bytes)
-    const resaleRoyaltyBps = data.readUInt16LE(offset);
+    // creatorRoyaltyBps (u16 - 2 bytes)
+    const creatorRoyaltyBps = data.readUInt16LE(offset);
     offset += 2;
 
     // status (enum - 1 byte)
@@ -83,6 +83,7 @@ function parseListingAccount(pubkey: PublicKey, data: Buffer): ListingAccount | 
       0: 'Active',
       1: 'Sold',
       2: 'Cancelled',
+      3: 'Expired',
     };
     const status = statusMap[statusByte] || 'Unknown';
 
@@ -94,9 +95,9 @@ function parseListingAccount(pubkey: PublicKey, data: Buffer): ListingAccount | 
       price: price.toString(),
       percentageBps,
       durationSeconds: durationSeconds.toString(),
-      createdAt: createdAt.toString(),
+      createdAt: startTimestamp.toString(),
       resaleAllowed,
-      resaleRoyaltyBps,
+      resaleRoyaltyBps: creatorRoyaltyBps,
       status,
     };
   } catch (error) {
