@@ -92,12 +92,17 @@ async function fetchResaleListingsFromChain(): Promise<ResaleListingAccount[]> {
   return listings;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Try to get from cache first
-    if (isRedisConfigured()) {
+    // Check for cache bypass
+    const { searchParams } = new URL(request.url);
+    const skipCache = searchParams.get('fresh') === 'true';
+
+    // Try to get from cache first (unless bypassed)
+    if (!skipCache && isRedisConfigured()) {
       const cached = await getFromCache<ResaleListingAccount[]>(CACHE_KEY);
       if (cached) {
+        console.log(`Serving ${cached.length} resale listings from cache`);
         return NextResponse.json({
           success: true,
           data: cached,
@@ -107,8 +112,11 @@ export async function GET() {
       }
     }
 
+    console.log(`Fetching resale listings from chain...`);
+    
     // Fetch from chain
     const listings = await fetchResaleListingsFromChain();
+    console.log(`Found ${listings.length} active resale listings on chain`);
 
     // Cache the results
     if (isRedisConfigured()) {
@@ -119,6 +127,7 @@ export async function GET() {
       success: true,
       data: listings,
       cached: false,
+      count: listings.length,
       timestamp: Date.now(),
     });
   } catch (error) {

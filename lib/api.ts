@@ -39,13 +39,17 @@ export interface APIResponse<T> {
 /**
  * Fetch all primary listings from the cached API
  */
-export async function fetchListingsFromAPI(): Promise<ListingFromAPI[]> {
+export async function fetchListingsFromAPI(fresh = false): Promise<ListingFromAPI[]> {
   try {
-    const response = await fetch('/api/listings');
+    const url = fresh ? '/api/listings?fresh=true' : '/api/listings';
+    console.log('Fetching listings from:', url);
+    const response = await fetch(url, { cache: 'no-store' });
     const result: APIResponse<ListingFromAPI[]> = await response.json();
     
+    console.log('API response:', result);
+    
     if (!result.success || !result.data) {
-      console.error('API error:', result.error);
+      console.error('API error:', result.error, result.message);
       return [];
     }
     
@@ -53,6 +57,7 @@ export async function fetchListingsFromAPI(): Promise<ListingFromAPI[]> {
       console.log('Listings served from cache');
     }
     
+    console.log(`Got ${result.data.length} listings from API`);
     return result.data;
   } catch (error) {
     console.error('Failed to fetch listings from API:', error);
@@ -63,13 +68,14 @@ export async function fetchListingsFromAPI(): Promise<ListingFromAPI[]> {
 /**
  * Fetch all resale listings from the cached API
  */
-export async function fetchResaleListingsFromAPI(): Promise<ResaleListingFromAPI[]> {
+export async function fetchResaleListingsFromAPI(fresh = false): Promise<ResaleListingFromAPI[]> {
   try {
-    const response = await fetch('/api/resale-listings');
+    const url = fresh ? '/api/resale-listings?fresh=true' : '/api/resale-listings';
+    const response = await fetch(url, { cache: 'no-store' });
     const result: APIResponse<ResaleListingFromAPI[]> = await response.json();
     
     if (!result.success || !result.data) {
-      console.error('API error:', result.error);
+      console.error('Resale API error:', result.error);
       return [];
     }
     
@@ -77,6 +83,7 @@ export async function fetchResaleListingsFromAPI(): Promise<ResaleListingFromAPI
       console.log('Resale listings served from cache');
     }
     
+    console.log(`Got ${result.data.length} resale listings from API`);
     return result.data;
   } catch (error) {
     console.error('Failed to fetch resale listings from API:', error);

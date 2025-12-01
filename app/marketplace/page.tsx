@@ -38,13 +38,15 @@ export default function MarketplacePage() {
     async function loadListings() {
       setIsLoading(true);
       try {
-        // Fetch primary listings from cached API
-        const primaryData = await fetchListingsFromAPI();
+        // Fetch primary listings from API (fresh to bypass any stale cache)
+        const primaryData = await fetchListingsFromAPI(true);
+        console.log('Raw primary data from API:', primaryData);
         
         // Filter to active listings only (show all formats)
         const activeListings = primaryData.filter(l => 
           l.status === 'Active' && l.metadataUri
         );
+        console.log('Active listings:', activeListings.length);
         
         // Fetch metadata for each listing (in parallel)
         const formattedPrimary: ListingData[] = await Promise.all(
@@ -77,8 +79,8 @@ export default function MarketplacePage() {
           })
         );
         
-        // Fetch secondary listings from cached API
-        const secondaryData = await fetchResaleListingsFromAPI();
+        // Fetch secondary listings from API (fresh to bypass any stale cache)
+        const secondaryData = await fetchResaleListingsFromAPI(true);
         const formattedSecondary: ListingData[] = secondaryData
           .filter(l => l.isActive)
           .map(l => {
