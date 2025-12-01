@@ -20,7 +20,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Royalties.fun | On-Chain Creator Royalty Marketplace",
+  title: "royalties.fun",
   description: "Buy and sell creator royalties on-chain. Creators raise capital. Investors trade future revenue.",
 };
 
