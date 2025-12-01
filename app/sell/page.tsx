@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { BN } from "@coral-xyz/anchor";
 import SectionHeader from "@/components/SectionHeader";
@@ -8,6 +8,152 @@ import Card from "@/components/Card";
 import AnimatedSection from "@/components/AnimatedSection";
 import { useToast } from "@/components/Toast";
 import { useRoyaltiesProgram, createRoyaltyListing, isPlatformInitialized } from "@/lib/solana";
+
+// Image Upload Component
+function ImageUpload({ 
+  imageUrl, 
+  onImageChange, 
+  onError 
+}: { 
+  imageUrl: string; 
+  onImageChange: (url: string) => void; 
+  onError: (msg: string) => void;
+}) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size
+    if (file.size > 500 * 1024) {
+      onError("Image must be under 500KB");
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      onError("Please select an image file");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(20);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      setUploadProgress(50);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      setUploadProgress(80);
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Upload failed');
+      }
+
+      setUploadProgress(100);
+      onImageChange(result.url);
+    } catch (error) {
+      console.error('Upload error:', error);
+      onError(error instanceof Error ? error.message : 'Failed to upload image');
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-2">
+        Cover Image <span className="text-black/40">(optional)</span>
+      </label>
+      
+      {/* Upload Area */}
+      {!imageUrl ? (
+        <label className="block cursor-pointer">
+          <div className={`border-2 border-dashed border-black/30 p-8 text-center hover:border-black transition-colors ${isUploading ? 'opacity-50' : ''}`}>
+            {isUploading ? (
+              <div className="space-y-3">
+                <div className="w-8 h-8 border-2 border-black/20 border-t-black rounded-full animate-spin mx-auto" />
+                <p className="text-sm text-black/60">Uploading... {uploadProgress}%</p>
+                <div className="w-full bg-black/10 h-1">
+                  <div 
+                    className="bg-black h-1 transition-all duration-300" 
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="text-3xl mb-2">+</div>
+                <p className="font-medium">Click to upload image</p>
+                <p className="text-sm text-black/60 mt-1">PNG, JPG up to 500KB</p>
+              </>
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileSelect}
+            disabled={isUploading}
+          />
+        </label>
+      ) : (
+        <div className="relative">
+          <div className="border border-black/20 p-2">
+            <img 
+              src={imageUrl} 
+              alt="Cover" 
+              className="w-full h-40 object-cover"
+            />
+          </div>
+          <div className="mt-2 flex gap-2">
+            <label className="flex-1 cursor-pointer">
+              <div className="px-4 py-2 border border-black text-center text-sm font-medium hover:bg-black hover:text-white transition-colors">
+                {isUploading ? 'Uploading...' : 'Change Image'}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileSelect}
+                disabled={isUploading}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => onImageChange('')}
+              className="px-4 py-2 border border-black/30 text-sm font-medium text-black/60 hover:border-black hover:text-black transition-colors"
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+      )}
+      
+      <p className="mt-2 text-sm text-black/60">
+        A thumbnail image for your listing (YouTube thumbnail, album art, etc.)
+      </p>
+    </div>
+  );
+}
 
 // Revenue source labels
 const revenueSourceLabels: Record<string, string> = {
@@ -310,35 +456,11 @@ export default function SellPage() {
                         </div>
                       </div>
 
-                      <div>
-                        <label htmlFor="imageUrl" className="block text-sm font-medium mb-2">
-                          Cover Image URL <span className="text-black/40">(optional)</span>
-                        </label>
-                        <input
-                          type="url"
-                          id="imageUrl"
-                          name="imageUrl"
-                          value={formData.imageUrl}
-                          onChange={handleChange}
-                          placeholder="https://i.imgur.com/example.jpg"
-                          className="w-full px-4 py-3 border border-black bg-white text-black placeholder:text-black/40 focus:outline-none focus:ring-2 focus:ring-black"
-                        />
-                        <p className="mt-2 text-sm text-black/60">
-                          Link to a thumbnail image. Use <a href="https://imgur.com" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">imgur.com</a> or similar to host your image.
-                        </p>
-                        {formData.imageUrl && (
-                          <div className="mt-3 border border-black/20 p-2">
-                            <img 
-                              src={formData.imageUrl} 
-                              alt="Preview" 
-                              className="w-full h-32 object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                              }}
-                            />
-                          </div>
-                        )}
-                      </div>
+                      <ImageUpload
+                        imageUrl={formData.imageUrl}
+                        onImageChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+                        onError={(msg) => showToast(msg, "error")}
+                      />
                     </div>
                   </Card>
                 </AnimatedSection>
