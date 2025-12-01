@@ -533,7 +533,7 @@ export default function DashboardPage() {
                 </Link>
                 </Card>
             )
-          ) : (
+          ) : activeTab === "created" ? (
             /* Created Listings */
             createdListings.length > 0 ? (
               <div className="space-y-4">
