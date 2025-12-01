@@ -103,13 +103,9 @@ export default function ListingCard({ listing }: ListingCardProps) {
   const remainingTime = getRemainingTime();
 
   return (
-    <Card className={`flex flex-col h-full hover:border-black/50 transition-colors overflow-hidden ${isSecondary ? 'border-l-4 border-l-purple-400' : ''}`}>
+    <Card className="flex flex-col h-full hover:border-black/50 transition-colors overflow-hidden">
       {/* Image/Visual Header */}
       <div className={`relative h-32 -mx-6 -mt-6 mb-4 ${platformColors[platform]} flex items-center justify-center`}>
-        {/* Secondary market accent line */}
-        {isSecondary && (
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400 to-pink-400" />
-        )}
         {imageUrl ? (
           <img 
             src={imageUrl} 

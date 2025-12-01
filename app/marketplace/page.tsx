@@ -219,28 +219,26 @@ export default function MarketplacePage() {
           />
 
           {/* Market Type Toggle */}
-          <div className="flex gap-0 mt-8 inline-flex">
+          <div className="flex gap-0 mt-8 border border-black inline-flex">
             <button
               onClick={() => setMarketType("secondary")}
-              className={`px-8 py-3 font-medium text-sm transition-colors border ${
+              className={`px-8 py-3 font-medium text-sm transition-colors ${
                 marketType === "secondary"
-                  ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white border-purple-500"
-                  : "bg-white text-black border-black hover:bg-purple-50"
+                  ? "bg-black text-white"
+                  : "bg-white text-black hover:bg-gray-100"
               }`}
             >
               Secondary Market
-              <span className="ml-2 text-xs opacity-70">RESALES</span>
             </button>
             <button
               onClick={() => setMarketType("primary")}
-              className={`px-8 py-3 font-medium text-sm transition-colors border border-l-0 ${
+              className={`px-8 py-3 font-medium text-sm transition-colors border-l border-black ${
                 marketType === "primary"
-                  ? "bg-black text-white border-black"
-                  : "bg-white text-black border-black hover:bg-gray-100"
+                  ? "bg-black text-white"
+                  : "bg-white text-black hover:bg-gray-100"
               }`}
             >
               Primary Market
-              <span className="ml-2 text-xs opacity-60">NEW</span>
             </button>
           </div>
           
@@ -248,28 +246,28 @@ export default function MarketplacePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
             {marketType === "secondary" ? (
               <>
-                <div className="border border-purple-300 bg-purple-50/50 p-4">
-                  <p className="text-sm text-purple-600">Active Resales</p>
+                <div className="border border-black p-4">
+                  <p className="text-sm text-black/60">Active Resales</p>
                   <p className="text-2xl font-bold">{onChainSecondaryListings.length}</p>
                 </div>
-                <div className="border border-purple-300 bg-purple-50/50 p-4">
-                  <p className="text-sm text-purple-600">Floor Price</p>
+                <div className="border border-black p-4">
+                  <p className="text-sm text-black/60">Floor Price</p>
                   <p className="text-2xl font-bold">
                     {onChainSecondaryListings.length > 0 
                       ? `$${Math.min(...onChainSecondaryListings.map(l => l.price)).toLocaleString()}`
                       : '—'}
                   </p>
                 </div>
-                <div className="border border-purple-300 bg-purple-50/50 p-4">
-                  <p className="text-sm text-purple-600">Highest Price</p>
+                <div className="border border-black p-4">
+                  <p className="text-sm text-black/60">Highest Price</p>
                   <p className="text-2xl font-bold">
                     {onChainSecondaryListings.length > 0 
                       ? `$${Math.max(...onChainSecondaryListings.map(l => l.price)).toLocaleString()}`
                       : '—'}
                   </p>
                 </div>
-                <div className="border border-purple-300 bg-purple-50/50 p-4">
-                  <p className="text-sm text-purple-600">Total Value</p>
+                <div className="border border-black p-4">
+                  <p className="text-sm text-black/60">Total Value</p>
                   <p className="text-2xl font-bold">
                     {onChainSecondaryListings.length > 0 
                       ? `$${onChainSecondaryListings.reduce((sum, l) => sum + l.price, 0).toLocaleString()}`
