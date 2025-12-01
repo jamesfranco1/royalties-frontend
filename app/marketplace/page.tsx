@@ -87,21 +87,44 @@ export default function MarketplacePage() {
         
         // Fetch secondary listings from API (fresh to bypass any stale cache)
         const secondaryData = await fetchResaleListingsFromAPI(true);
-        const formattedSecondary: ListingData[] = secondaryData
-          .filter(l => l.isActive)
-          .map(l => {
-            const priceUsdc = Number(l.price) / 1_000_000;
-            return {
-              id: l.pubkey,
-              creatorName: "Resale Listing",
-              revenueSource: "Secondary Market",
-              percentageOffered: 0,
-              duration: "See Details",
-              price: priceUsdc,
-              isSecondary: true,
-              currentOwner: `${l.seller.slice(0, 4)}...${l.seller.slice(-4)}`,
-            };
-          });
+        
+        // For resale listings, we need to fetch the original listing's metadata
+        const formattedSecondary: ListingData[] = await Promise.all(
+          secondaryData
+            .filter(l => l.isActive)
+            .map(async (l) => {
+              const priceUsdc = Number(l.price) / 1_000_000;
+              
+              // Try to find the original listing to get metadata
+              const originalListing = primaryData.find(p => p.pubkey === l.originalListing);
+              let metadata = { name: 'Resale Listing', platform: 'Secondary', imageUrl: '', description: '' };
+              
+              if (originalListing?.metadataUri) {
+                try {
+                  metadata = await fetchMetadataFromURI(originalListing.metadataUri);
+                } catch (e) {
+                  console.error('Failed to fetch resale metadata:', e);
+                }
+              }
+              
+              const platformLabel = sourceLabels[metadata.platform] || metadata.platform || 'Secondary';
+              
+              return {
+                id: l.pubkey,
+                creatorName: `${l.seller.slice(0, 4)}...${l.seller.slice(-4)}`,
+                revenueSource: platformLabel,
+                listingName: metadata.name || 'Resale Listing',
+                percentageOffered: originalListing ? originalListing.percentageBps / 100 : 0,
+                duration: "See Details",
+                price: priceUsdc,
+                isSecondary: true,
+                currentOwner: `${l.seller.slice(0, 4)}...${l.seller.slice(-4)}`,
+                imageUrl: metadata.imageUrl,
+                description: metadata.description,
+                platformIcon: metadata.platform,
+              };
+            })
+        );
 
         console.log('Formatted primary listings:', formattedPrimary.length);
         console.log('Formatted details:', formattedPrimary.map(l => ({
