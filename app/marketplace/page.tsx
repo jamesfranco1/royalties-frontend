@@ -212,99 +212,51 @@ export default function MarketplacePage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <section className="border-b border-black">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-          <SectionHeader
-            title="Marketplace"
-            subtitle="Browse and invest in creator royalties. Trade tokens on the secondary market or buy directly from creators."
-          />
-
-          {/* Market Type Toggle */}
-          <div className="flex gap-0 mt-8 border border-black inline-flex">
-            <button
-              onClick={() => setMarketType("secondary")}
-              className={`px-8 py-3 font-medium text-sm transition-colors ${
-                marketType === "secondary"
-                  ? "bg-black text-white"
-                  : "bg-white text-black hover:bg-gray-100"
-              }`}
-            >
-              Secondary Market
-            </button>
-            <button
-              onClick={() => setMarketType("primary")}
-              className={`px-8 py-3 font-medium text-sm transition-colors border-l border-black ${
-                marketType === "primary"
-                  ? "bg-black text-white"
-                  : "bg-white text-black hover:bg-gray-100"
-              }`}
-            >
-              Primary Market
-            </button>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold">Marketplace</h1>
+              <p className="text-black/60 text-sm mt-1">Browse and invest in creator royalties</p>
+            </div>
+            
+            {/* Market Type Toggle */}
+            <div className="flex gap-0 border border-black inline-flex">
+              <button
+                onClick={() => setMarketType("secondary")}
+                className={`px-6 py-2 font-medium text-sm transition-colors ${
+                  marketType === "secondary"
+                    ? "bg-black text-white"
+                    : "bg-white text-black hover:bg-gray-100"
+                }`}
+              >
+                Secondary
+              </button>
+              <button
+                onClick={() => setMarketType("primary")}
+                className={`px-6 py-2 font-medium text-sm transition-colors border-l border-black ${
+                  marketType === "primary"
+                    ? "bg-black text-white"
+                    : "bg-white text-black hover:bg-gray-100"
+                }`}
+              >
+                Primary
+              </button>
+            </div>
           </div>
           
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+          {/* Compact Stats */}
+          <div className="flex flex-wrap gap-6 mt-4 text-sm">
             {marketType === "secondary" ? (
               <>
-                <div className="border border-black p-4">
-                  <p className="text-sm text-black/60">Active Resales</p>
-                  <p className="text-2xl font-bold">{onChainSecondaryListings.length}</p>
-                </div>
-                <div className="border border-black p-4">
-                  <p className="text-sm text-black/60">Floor Price</p>
-                  <p className="text-2xl font-bold">
-                    {onChainSecondaryListings.length > 0 
-                      ? `$${Math.min(...onChainSecondaryListings.map(l => l.price)).toLocaleString()}`
-                      : '—'}
-                  </p>
-                </div>
-                <div className="border border-black p-4">
-                  <p className="text-sm text-black/60">Highest Price</p>
-                  <p className="text-2xl font-bold">
-                    {onChainSecondaryListings.length > 0 
-                      ? `$${Math.max(...onChainSecondaryListings.map(l => l.price)).toLocaleString()}`
-                      : '—'}
-                  </p>
-                </div>
-                <div className="border border-black p-4">
-                  <p className="text-sm text-black/60">Total Value</p>
-                  <p className="text-2xl font-bold">
-                    {onChainSecondaryListings.length > 0 
-                      ? `$${onChainSecondaryListings.reduce((sum, l) => sum + l.price, 0).toLocaleString()}`
-                      : '—'}
-                  </p>
-                </div>
+                <div><span className="text-black/50">Listings:</span> <span className="font-semibold">{onChainSecondaryListings.length}</span></div>
+                <div><span className="text-black/50">Floor:</span> <span className="font-semibold">{onChainSecondaryListings.length > 0 ? `$${Math.min(...onChainSecondaryListings.map(l => l.price)).toLocaleString()}` : '—'}</span></div>
+                <div><span className="text-black/50">Total Value:</span> <span className="font-semibold">{onChainSecondaryListings.length > 0 ? `$${onChainSecondaryListings.reduce((sum, l) => sum + l.price, 0).toLocaleString()}` : '—'}</span></div>
               </>
             ) : (
               <>
-                <div className="border border-black p-4">
-                  <p className="text-sm text-black/60">Active Listings</p>
-                  <p className="text-2xl font-bold">{onChainPrimaryListings.length}</p>
-                </div>
-                <div className="border border-black p-4">
-                  <p className="text-sm text-black/60">Floor Price</p>
-                  <p className="text-2xl font-bold">
-                    {onChainPrimaryListings.length > 0 
-                      ? `$${Math.min(...onChainPrimaryListings.map(l => l.price)).toLocaleString()}`
-                      : '—'}
-                  </p>
-                </div>
-                <div className="border border-black p-4">
-                  <p className="text-sm text-black/60">Highest Price</p>
-                  <p className="text-2xl font-bold">
-                    {onChainPrimaryListings.length > 0 
-                      ? `$${Math.max(...onChainPrimaryListings.map(l => l.price)).toLocaleString()}`
-                      : '—'}
-                  </p>
-                </div>
-                <div className="border border-black p-4">
-                  <p className="text-sm text-black/60">Total Value</p>
-                  <p className="text-2xl font-bold">
-                    {onChainPrimaryListings.length > 0 
-                      ? `$${onChainPrimaryListings.reduce((sum, l) => sum + l.price, 0).toLocaleString()}`
-                      : '—'}
-                  </p>
-                </div>
+                <div><span className="text-black/50">Listings:</span> <span className="font-semibold">{onChainPrimaryListings.length}</span></div>
+                <div><span className="text-black/50">Floor:</span> <span className="font-semibold">{onChainPrimaryListings.length > 0 ? `$${Math.min(...onChainPrimaryListings.map(l => l.price)).toLocaleString()}` : '—'}</span></div>
+                <div><span className="text-black/50">Total Value:</span> <span className="font-semibold">{onChainPrimaryListings.length > 0 ? `$${onChainPrimaryListings.reduce((sum, l) => sum + l.price, 0).toLocaleString()}` : '—'}</span></div>
               </>
             )}
           </div>
