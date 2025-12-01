@@ -55,17 +55,16 @@ export default function MarketplacePage() {
             const priceUsdc = Number(l.price) / 1_000_000;
             const durationSeconds = Number(l.durationSeconds);
             
-            // Build display name
+            // Build display names
             const platformLabel = sourceLabels[metadata.platform] || metadata.platform || 'Unknown';
-            const displayName = metadata.name && metadata.name !== 'Untitled' 
-              ? `${platformLabel} - ${metadata.name}`
-              : platformLabel !== 'Unknown' ? platformLabel : 'On-chain Listing';
+            const listingName = metadata.name && metadata.name !== 'Untitled' ? metadata.name : '';
             
             return {
               id: l.pubkey,
               creatorName: `${l.creator.slice(0, 4)}...${l.creator.slice(-4)}`,
               creatorAddress: l.creator,
-              revenueSource: displayName,
+              revenueSource: platformLabel,
+              listingName: listingName,
               percentageOffered: l.percentageBps / 100,
               duration: durationSeconds === 0 ? "Perpetual" : `${Math.floor(durationSeconds / (30 * 24 * 60 * 60))} months`,
               durationSeconds: durationSeconds,

@@ -18,6 +18,7 @@ export interface ListingData {
   imageUrl?: string;
   description?: string;
   platformIcon?: string; // youtube, spotify, twitch, etc.
+  listingName?: string; // The actual name of the listing
 }
 
 interface ListingCardProps {
@@ -66,6 +67,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
     currentOwner,
     imageUrl,
     platformIcon,
+    listingName,
   } = listing;
 
   // Detect platform from revenue source
@@ -145,8 +147,10 @@ export default function ListingCard({ listing }: ListingCardProps) {
       <div className="flex-1">
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-lg truncate">{creatorName}</h3>
-            <p className="text-sm text-black/60 truncate">{revenueSource}</p>
+            <h3 className="font-bold text-lg truncate">{listingName || revenueSource}</h3>
+            <p className="text-sm text-black/60 truncate">
+              {platformIcon ? `${platformIcon.charAt(0).toUpperCase() + platformIcon.slice(1)} • ` : ''}{creatorName}
+            </p>
           </div>
         </div>
 
