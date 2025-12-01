@@ -119,11 +119,6 @@ export default function ListingCard({ listing }: ListingCardProps) {
         )}
         {/* Overlay badges */}
         <div className="absolute top-3 left-3 flex gap-2">
-          {isSecondary && (
-            <span className="text-xs font-medium bg-purple-600 text-white px-2 py-1 uppercase tracking-wider">
-              Resale
-            </span>
-          )}
           {remainingTime && remainingTime !== "Expired" && (
             <span className="text-xs font-medium bg-black/70 text-white px-2 py-1">
               {remainingTime}

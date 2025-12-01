@@ -118,12 +118,13 @@ async function fetchListingsFromChain(): Promise<ListingAccount[]> {
 
   for (const { pubkey, account } of accounts) {
     const parsed = parseListingAccount(pubkey, account.data as Buffer);
-    if (parsed && parsed.status === 'Active') {
+    // Include Active and Sold listings (Sold needed for resale lookups)
+    if (parsed && (parsed.status === 'Active' || parsed.status === 'Sold')) {
       listings.push(parsed);
     }
   }
 
-  console.log(`Fetched ${accounts.length} program accounts, ${listings.length} active listings`);
+  console.log(`Fetched ${accounts.length} program accounts, ${listings.length} listings (active + sold)`);
 
   return listings;
 }

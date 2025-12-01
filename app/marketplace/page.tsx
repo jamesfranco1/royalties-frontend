@@ -39,11 +39,11 @@ export default function MarketplacePage() {
       setIsLoading(true);
       try {
         // Fetch primary listings from API (fresh to bypass any stale cache)
-        const primaryData = await fetchListingsFromAPI(true);
-        console.log('Raw primary data from API:', primaryData);
+        const allListings = await fetchListingsFromAPI(true);
+        console.log('Raw primary data from API:', allListings);
         
-        // Filter to active listings only (show all formats)
-        const activeListings = primaryData.filter(l => 
+        // Filter to active listings only for display (show all formats)
+        const activeListings = allListings.filter(l => 
           l.status === 'Active' && l.metadataUri
         );
         console.log('Active listings:', activeListings.length);
@@ -89,32 +89,37 @@ export default function MarketplacePage() {
         const secondaryData = await fetchResaleListingsFromAPI(true);
         
         // For resale listings, we need to fetch the original listing's metadata
+        // Note: Use ALL listings (not just active) since original might be "Sold"
         const formattedSecondary: ListingData[] = await Promise.all(
           secondaryData
             .filter(l => l.isActive)
             .map(async (l) => {
               const priceUsdc = Number(l.price) / 1_000_000;
               
-              // Try to find the original listing to get metadata
-              const originalListing = primaryData.find(p => p.pubkey === l.originalListing);
-              let metadata = { name: 'Resale Listing', platform: 'Secondary', imageUrl: '', description: '' };
+              // Try to find the original listing (could be Sold, not just Active)
+              const originalListing = allListings.find(p => p.pubkey === l.originalListing);
+              let metadata = { name: '', platform: '', imageUrl: '', description: '' };
+              let percentage = 0;
               
               if (originalListing?.metadataUri) {
                 try {
                   metadata = await fetchMetadataFromURI(originalListing.metadataUri);
+                  percentage = originalListing.percentageBps / 100;
                 } catch (e) {
                   console.error('Failed to fetch resale metadata:', e);
                 }
               }
               
-              const platformLabel = sourceLabels[metadata.platform] || metadata.platform || 'Secondary';
+              const platformLabel = sourceLabels[metadata.platform] || metadata.platform || 'Unknown';
+              const displayName = metadata.name && metadata.name !== 'Untitled' ? metadata.name : 'Royalty Contract';
               
               return {
                 id: l.pubkey,
                 creatorName: `${l.seller.slice(0, 4)}...${l.seller.slice(-4)}`,
+                creatorAddress: l.seller,
                 revenueSource: platformLabel,
-                listingName: metadata.name || 'Resale Listing',
-                percentageOffered: originalListing ? originalListing.percentageBps / 100 : 0,
+                listingName: displayName,
+                percentageOffered: percentage,
                 duration: "See Details",
                 price: priceUsdc,
                 isSecondary: true,
