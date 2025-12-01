@@ -42,7 +42,7 @@ export default function Navbar() {
           {/* Left side - Logo */}
           <Link href="/" className="flex items-center gap-3 hover:opacity-70 transition-opacity">
             <PlaceholderCrownLogo size={32} />
-            <span className="text-lg font-bold tracking-tight">Royalties.fun</span>
+            <span className="text-lg font-bold tracking-tight">royalties.fun</span>
           </Link>
 
           {/* Center - Nav links */}
