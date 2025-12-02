@@ -767,14 +767,6 @@ export default function DashboardPage() {
             activities.length > 0 ? (
               <div className="space-y-3">
                 {activities.map((activity) => {
-                  const activityIcons = {
-                    purchase: '🛒',
-                    sale: '💰',
-                    claim: '✅',
-                    deposit: '📥',
-                    list_resale: '🏷️',
-                    create_listing: '➕',
-                  };
                   const activityColors = {
                     purchase: 'bg-blue-100 text-blue-800',
                     sale: 'bg-green-100 text-green-800',
@@ -791,7 +783,6 @@ export default function DashboardPage() {
                       animate={{ opacity: 1, x: 0 }}
                       className="flex items-center gap-4 p-4 border border-black/10 hover:border-black/30 transition-colors"
                     >
-                      <div className="text-2xl">{activityIcons[activity.type]}</div>
                       <div className="flex-1">
                         <p className="font-medium">{activity.description}</p>
                         <div className="flex items-center gap-3 mt-1">
