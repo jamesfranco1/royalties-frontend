@@ -18,7 +18,7 @@ import {
   useRoyaltiesProgram,
 } from "@/lib/solana";
 import { fetchMetadataFromURI } from "@/lib/api";
-import { generateContractPDF, ContractData } from "@/lib/contractPDF";
+import { generateContractPDF, getContractTiming, ContractData } from "@/lib/contractPDF";
 
 interface OwnedRoyalty {
   publicKey: string;
@@ -111,6 +111,10 @@ export default function DashboardPage() {
   const [showResaleModal, setShowResaleModal] = useState(false);
   const [resaleRoyalty, setResaleRoyalty] = useState<OwnedRoyalty | null>(null);
   const [resalePrice, setResalePrice] = useState("");
+
+  // Contract preview modal state
+  const [showContractModal, setShowContractModal] = useState(false);
+  const [contractRoyalty, setContractRoyalty] = useState<OwnedRoyalty | null>(null);
 
   // Fetch data when wallet connects
   useEffect(() => {
@@ -268,11 +272,16 @@ export default function DashboardPage() {
     }
   };
 
-  // Handle view contract PDF
+  // Handle view contract (show preview modal)
   const handleViewContract = (royalty: OwnedRoyalty) => {
-    const { source, work, imageUrl } = parseUri(royalty.metadataUri);
-    
-    const contractData: ContractData = {
+    setContractRoyalty(royalty);
+    setShowContractModal(true);
+  };
+
+  // Get contract data for PDF
+  const getContractData = (royalty: OwnedRoyalty): ContractData => {
+    const { source, work } = parseUri(royalty.metadataUri);
+    return {
       contractId: royalty.publicKey,
       nftMint: royalty.nftMint,
       creatorWallet: royalty.creator,
@@ -288,7 +297,12 @@ export default function DashboardPage() {
       totalClaimed: royalty.payoutPool?.totalClaimedUsdc,
       availableToClaim: royalty.payoutPool?.availableToClaimUsdc,
     };
-    
+  };
+
+  // Handle download contract PDF
+  const handleDownloadContract = () => {
+    if (!contractRoyalty) return;
+    const contractData = getContractData(contractRoyalty);
     generateContractPDF(contractData);
     showToast('Contract PDF downloaded!', 'success');
   };
@@ -963,8 +977,8 @@ export default function DashboardPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-black/60">Creator Royalty</span>
                     <span>5%</span>
-          </div>
-        </div>
+                  </div>
+                </div>
                 
                 <div className="bg-yellow-50 border border-yellow-200 p-3 mb-6">
                   <p className="text-xs text-yellow-700">
@@ -983,6 +997,197 @@ export default function DashboardPage() {
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* Contract Preview Modal */}
+      <AnimatePresence>
+        {showContractModal && contractRoyalty && (() => {
+          const { source, work, imageUrl } = parseUri(contractRoyalty.metadataUri);
+          const contractData = getContractData(contractRoyalty);
+          const timing = getContractTiming(contractData);
+          
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"
+              onClick={() => setShowContractModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white w-full max-w-2xl my-8"
+              >
+                {/* Header */}
+                <div className="border-b-2 border-black p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-xl font-bold">Digital Royalty Rights Agreement</h2>
+                      <p className="text-sm text-black/60">Revenue Participation Certificate</p>
+                    </div>
+                    <button
+                      onClick={() => setShowContractModal(false)}
+                      className="text-black/60 hover:text-black text-xl"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {imageUrl ? (
+                      <img src={imageUrl} alt={work} className="w-16 h-16 object-cover border border-black" />
+                    ) : (
+                      <div className="w-16 h-16 bg-black flex items-center justify-center text-white font-bold text-2xl">
+                        {source.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-bold text-lg">{work}</p>
+                      <p className="text-black/60 capitalize">{source}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contract Details */}
+                <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+                  {/* Parties */}
+                  <div>
+                    <h3 className="font-bold text-sm uppercase text-black/60 mb-3">Parties to this Agreement</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between py-2 border-b border-black/10">
+                        <span className="text-black/60">Creator</span>
+                        <span className="font-mono text-sm">{contractRoyalty.creator.slice(0, 8)}...{contractRoyalty.creator.slice(-8)}</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-black/10">
+                        <span className="text-black/60">Rights Holder (You)</span>
+                        <span className="font-mono text-sm">{publicKey?.toBase58().slice(0, 8)}...{publicKey?.toBase58().slice(-8)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Terms */}
+                  <div>
+                    <h3 className="font-bold text-sm uppercase text-black/60 mb-3">Financial Terms</h3>
+                    <div className="bg-black/5 p-4 space-y-3">
+                      <div className="flex justify-between">
+                        <span>Royalty Percentage</span>
+                        <span className="font-bold text-lg">{contractRoyalty.percentage}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Purchase Price</span>
+                        <span className="font-bold">${contractRoyalty.priceUsdc.toLocaleString()} USDC</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Transferability</span>
+                        <span className={contractRoyalty.resaleAllowed ? "text-green-600" : "text-red-600"}>
+                          {contractRoyalty.resaleAllowed ? "Transferable" : "Non-transferable"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Duration */}
+                  <div>
+                    <h3 className="font-bold text-sm uppercase text-black/60 mb-3">Term and Duration</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between py-2 border-b border-black/10">
+                        <span className="text-black/60">Start Date</span>
+                        <span>{timing.startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-black/10">
+                        <span className="text-black/60">End Date</span>
+                        <span>{timing.isPerpetual ? 'Perpetual (No Expiration)' : timing.endDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-black/10">
+                        <span className="text-black/60">Status</span>
+                        <span className={`font-bold ${timing.status === 'Active' ? 'text-green-600' : 'text-red-600'}`}>
+                          {timing.status}
+                        </span>
+                      </div>
+                      {!timing.isPerpetual && timing.status === 'Active' && (
+                        <div className="flex justify-between py-2 border-b border-black/10">
+                          <span className="text-black/60">Time Remaining</span>
+                          <span>{timing.remainingDays} days, {timing.remainingHours} hours</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Payout Summary */}
+                  {contractRoyalty.payoutPool && (
+                    <div>
+                      <h3 className="font-bold text-sm uppercase text-black/60 mb-3">Financial Summary</h3>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="bg-black/5 p-3 text-center">
+                          <p className="text-xs text-black/60 mb-1">Total Deposited</p>
+                          <p className="font-bold">${(contractRoyalty.payoutPool.totalDepositedUsdc || 0).toFixed(2)}</p>
+                        </div>
+                        <div className="bg-black/5 p-3 text-center">
+                          <p className="text-xs text-black/60 mb-1">Total Claimed</p>
+                          <p className="font-bold">${(contractRoyalty.payoutPool.totalClaimedUsdc || 0).toFixed(2)}</p>
+                        </div>
+                        <div className="bg-green-50 p-3 text-center">
+                          <p className="text-xs text-green-700 mb-1">Available</p>
+                          <p className="font-bold text-green-600">${(contractRoyalty.payoutPool.availableToClaimUsdc || 0).toFixed(2)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Creator Obligations */}
+                  <div>
+                    <h3 className="font-bold text-sm uppercase text-black/60 mb-3">Creator Obligations</h3>
+                    <div className="text-sm space-y-2 text-black/80">
+                      <p>The Creator agrees to deposit {contractRoyalty.percentage}% of all revenue earned from "{work}" into the smart contract payout pool.</p>
+                      <p>Payments shall be made in USDC to the designated smart contract address.</p>
+                      <p>The Rights Holder may claim accumulated royalties at any time through the platform interface.</p>
+                      <p>This agreement is recorded on the Solana blockchain and is self-executing.</p>
+                    </div>
+                  </div>
+
+                  {/* Blockchain Verification */}
+                  <div className="bg-black/5 p-4 text-sm">
+                    <h3 className="font-bold mb-2">Blockchain Verification</h3>
+                    <p className="text-black/60 mb-2">This contract is recorded on-chain and can be independently verified:</p>
+                    <div className="font-mono text-xs break-all">
+                      <p><span className="text-black/60">Contract:</span> {contractRoyalty.publicKey}</p>
+                      <p><span className="text-black/60">NFT Mint:</span> {contractRoyalty.nftMint}</p>
+                    </div>
+                    <a
+                      href={`https://explorer.solana.com/address/${contractRoyalty.publicKey}?cluster=devnet`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-2 text-blue-600 hover:underline"
+                    >
+                      View on Solana Explorer
+                    </a>
+                  </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="border-t-2 border-black p-6 flex gap-4">
+                  <button
+                    onClick={() => setShowContractModal(false)}
+                    className="flex-1 py-3 border border-black font-medium hover:bg-black/5 transition-colors"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={handleDownloadContract}
+                    className="flex-1 py-3 bg-black text-white font-medium hover:bg-black/80 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Download PDF
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
     </div>
   );
