@@ -218,29 +218,29 @@ export default function MarketplacePage() {
               <h1 className="text-3xl font-bold">Marketplace</h1>
               <p className="text-black/60 text-sm mt-1">Browse and invest in creator royalties</p>
             </div>
-            
-            {/* Market Type Toggle */}
+
+          {/* Market Type Toggle */}
             <div className="flex gap-0 border border-black inline-flex">
-              <button
-                onClick={() => setMarketType("secondary")}
+            <button
+              onClick={() => setMarketType("secondary")}
                 className={`px-6 py-2 font-medium text-sm transition-colors ${
-                  marketType === "secondary"
-                    ? "bg-black text-white"
-                    : "bg-white text-black hover:bg-gray-100"
-                }`}
-              >
+                marketType === "secondary"
+                  ? "bg-black text-white"
+                  : "bg-white text-black hover:bg-gray-100"
+              }`}
+            >
                 Secondary
-              </button>
-              <button
-                onClick={() => setMarketType("primary")}
+            </button>
+            <button
+              onClick={() => setMarketType("primary")}
                 className={`px-6 py-2 font-medium text-sm transition-colors border-l border-black ${
-                  marketType === "primary"
-                    ? "bg-black text-white"
-                    : "bg-white text-black hover:bg-gray-100"
-                }`}
-              >
+                marketType === "primary"
+                  ? "bg-black text-white"
+                  : "bg-white text-black hover:bg-gray-100"
+              }`}
+            >
                 Primary
-              </button>
+            </button>
             </div>
           </div>
           

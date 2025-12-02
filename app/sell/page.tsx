@@ -182,6 +182,7 @@ export default function SellPage() {
     duration: "",
     reportingFrequency: "monthly",
     price: "",
+    priceSol: "",
     resaleRoyalty: "",
     allowResale: true,
   });
@@ -252,8 +253,16 @@ export default function SellPage() {
       const durationSeconds = new BN(durationMonths * 30 * 24 * 60 * 60);
       
       const percentageBps = Math.floor(Number(formData.percentageSold) * 100);
-      const priceUsdc = Math.floor(Number(formData.price) * 1_000_000);
+      const priceUsdc = Math.floor(Number(formData.price || 0) * 1_000_000);
+      const priceSolValue = parseFloat(formData.priceSol || '0');
       const resaleRoyaltyBps = Math.floor(Number(formData.resaleRoyalty || 0) * 100);
+
+      // Validate at least one price is set
+      if (priceUsdc === 0 && priceSolValue === 0) {
+        showToast("Please set at least one price (USDC or SOL)", "error");
+        setIsSubmitting(false);
+        return;
+      }
       
       // Create metadata object
       const metadata = {
@@ -284,12 +293,17 @@ export default function SellPage() {
         throw new Error('Metadata URL too long');
       }
 
+      // Convert SOL price to lamports (1 SOL = 1e9 lamports)
+      const priceSolLamports = formData.priceSol 
+        ? Math.floor(parseFloat(formData.priceSol) * 1_000_000_000)
+        : 0;
+
       const args = {
         metadataUri: metadataUri,
         percentageBps: percentageBps,
         durationSeconds: durationSeconds,
         price: new BN(priceUsdc),
-        priceSol: new BN(0), // SOL price - 0 means SOL not accepted (can add UI later)
+        priceSol: new BN(priceSolLamports),
         resaleAllowed: Boolean(formData.allowResale),
         creatorRoyaltyBps: resaleRoyaltyBps,
       };
@@ -310,6 +324,7 @@ export default function SellPage() {
         duration: "",
         reportingFrequency: "monthly",
         price: "",
+        priceSol: "",
         resaleRoyalty: "",
         allowResale: true,
       });
@@ -551,24 +566,48 @@ export default function SellPage() {
                   <Card>
                     <h3 className="text-xl font-bold mb-6">Pricing</h3>
                     <div className="space-y-6">
-                      <div>
-                        <label htmlFor="price" className="block text-sm font-medium mb-2">
-                          Price (USDC)
-                        </label>
-                        <input
-                          type="number"
-                          id="price"
-                          name="price"
-                          value={formData.price}
-                          onChange={handleChange}
-                          placeholder="e.g., 5000"
-                          min="1"
-                          className="w-full px-4 py-3 border border-black bg-white text-black placeholder:text-black/40 focus:outline-none focus:ring-2 focus:ring-black"
-                        />
-                        <p className="mt-2 text-sm text-black/60">
-                          The amount you want to raise for this royalty contract.
-                        </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label htmlFor="price" className="block text-sm font-medium mb-2">
+                            Price (USDC)
+                          </label>
+                          <input
+                            type="number"
+                            id="price"
+                            name="price"
+                            value={formData.price}
+                            onChange={handleChange}
+                            placeholder="e.g., 5000"
+                            min="0"
+                            className="w-full px-4 py-3 border border-black bg-white text-black placeholder:text-black/40 focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                          <p className="mt-2 text-sm text-black/60">
+                            Stablecoin price (0 = not accepted)
+                          </p>
+                        </div>
+                        <div>
+                          <label htmlFor="priceSol" className="block text-sm font-medium mb-2">
+                            Price (SOL)
+                          </label>
+                          <input
+                            type="number"
+                            id="priceSol"
+                            name="priceSol"
+                            value={formData.priceSol}
+                            onChange={handleChange}
+                            placeholder="e.g., 25"
+                            min="0"
+                            step="0.01"
+                            className="w-full px-4 py-3 border border-black bg-white text-black placeholder:text-black/40 focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                          <p className="mt-2 text-sm text-black/60">
+                            Native SOL price (0 = not accepted)
+                          </p>
+                        </div>
                       </div>
+                      <p className="text-sm text-black/60 bg-black/5 p-3">
+                        Set at least one price. Buyers can pay with either USDC or SOL.
+                      </p>
                     </div>
                   </Card>
                 </AnimatedSection>

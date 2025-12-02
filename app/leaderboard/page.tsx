@@ -43,12 +43,10 @@ export default function LeaderboardPage() {
         const primaryListings = await fetchListingsFromAPI();
         const resaleListings = await fetchResaleListingsFromAPI();
 
-        // Aggregate creator stats
+        // Aggregate creator stats - count SOLD listings as "raised"
         const creatorMap = new Map<string, CreatorStats>();
         
         for (const listing of primaryListings) {
-          if (listing.status !== 'Active') continue;
-          
           const existing = creatorMap.get(listing.creator) || {
             address: listing.creator,
             displayName: `${listing.creator.slice(0, 4)}...${listing.creator.slice(-4)}`,
@@ -57,13 +55,23 @@ export default function LeaderboardPage() {
             listings: 0,
           };
           
-          existing.totalRaised += Number(listing.price) / 1_000_000;
-          existing.listings += 1;
+          // Count sold listings as revenue raised
+          if (listing.status === 'Sold') {
+            existing.totalRaised += Number(listing.price) / 1_000_000;
+            existing.contractsSold += 1;
+          }
+          
+          // Count active listings
+          if (listing.status === 'Active') {
+            existing.listings += 1;
+          }
+          
           creatorMap.set(listing.creator, existing);
         }
 
-        // Sort creators by total raised
+        // Sort creators by total raised (actual sales)
         const sortedCreators = Array.from(creatorMap.values())
+          .filter(c => c.totalRaised > 0 || c.listings > 0) // Only show creators with activity
           .sort((a, b) => b.totalRaised - a.totalRaised);
 
         // Aggregate trader/seller stats from resale listings
@@ -89,15 +97,18 @@ export default function LeaderboardPage() {
           .sort((a, b) => b.volume - a.volume);
 
         // Calculate total stats
-        const totalValue = primaryListings.reduce((sum, l) => sum + Number(l.price) / 1_000_000, 0);
+        const totalRaised = primaryListings
+          .filter(l => l.status === 'Sold')
+          .reduce((sum, l) => sum + Number(l.price) / 1_000_000, 0);
+        const totalSold = primaryListings.filter(l => l.status === 'Sold').length;
         
         setCreators(sortedCreators);
         setTraders(sortedTraders);
         setTotalStats({
-          totalValue,
+          totalValue: totalRaised,
           totalListings: primaryListings.filter(l => l.status === 'Active').length,
-          totalResales: resaleListings.filter(l => l.isActive).length,
-          uniqueCreators: creatorMap.size,
+          totalResales: resaleListings.length,
+          uniqueCreators: sortedCreators.length,
         });
       } catch (error) {
         console.error("Failed to load leaderboard data:", error);
@@ -122,8 +133,8 @@ export default function LeaderboardPage() {
           {/* Stats summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
             <div className="border border-black p-4">
-              <p className="text-sm text-black/60">Total Listings Value</p>
-              <p className="text-2xl font-bold">
+              <p className="text-sm text-black/60">Total Raised</p>
+              <p className="text-2xl font-bold text-green-600">
                 {isLoading ? '...' : `$${totalStats.totalValue.toLocaleString()}`}
               </p>
             </div>
@@ -134,13 +145,13 @@ export default function LeaderboardPage() {
               </p>
             </div>
             <div className="border border-black p-4">
-              <p className="text-sm text-black/60">Resale Listings</p>
+              <p className="text-sm text-black/60">Secondary Market</p>
               <p className="text-2xl font-bold">
                 {isLoading ? '...' : totalStats.totalResales}
               </p>
             </div>
             <div className="border border-black p-4">
-              <p className="text-sm text-black/60">Unique Creators</p>
+              <p className="text-sm text-black/60">Creators</p>
               <p className="text-2xl font-bold">
                 {isLoading ? '...' : totalStats.uniqueCreators}
               </p>
@@ -202,9 +213,10 @@ export default function LeaderboardPage() {
                           <tr className="bg-black text-white">
                             <th className="border border-black p-4 text-center font-bold w-20">Rank</th>
                             <th className="border border-black p-4 text-left font-bold">Creator</th>
-                            <th className="border border-black p-4 text-right font-bold w-48">Total Value (USDC)</th>
-                            <th className="border border-black p-4 text-center font-bold w-40">Active Listings</th>
-                            <th className="border border-black p-4 text-center font-bold w-32">Profile</th>
+                            <th className="border border-black p-4 text-right font-bold w-40">Total Raised</th>
+                            <th className="border border-black p-4 text-center font-bold w-28">Sold</th>
+                            <th className="border border-black p-4 text-center font-bold w-28">Active</th>
+                            <th className="border border-black p-4 text-center font-bold w-28">Profile</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -227,8 +239,11 @@ export default function LeaderboardPage() {
                                   </div>
                                 </div>
                               </td>
-                              <td className="border border-black p-4 text-right font-bold">
+                              <td className="border border-black p-4 text-right font-bold text-green-600">
                                 ${creator.totalRaised.toLocaleString()}
+                              </td>
+                              <td className="border border-black p-4 text-center font-medium">
+                                {creator.contractsSold}
                               </td>
                               <td className="border border-black p-4 text-center font-medium">
                                 {creator.listings}
