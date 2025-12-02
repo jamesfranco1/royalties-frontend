@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { getFromCache, setInCache, CACHE_TTL, isRedisConfigured } from '@/lib/redis';
 
-const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID || '9d7TAi23mZtsXV4TRrMjmzHpVaBUxkzekhbc2q7YgJXF';
+const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID || '5qw1oP8MLMdtPWrtjdpt2nHWZykTHVEZH1NpYaX8aj9b';
 const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
 
 const CACHE_KEY = 'listings:primary';
@@ -13,6 +13,7 @@ interface ListingAccount {
   nftMint: string;
   metadataUri: string;
   price: string;
+  priceSol: string;
   percentageBps: number;
   durationSeconds: string;
   createdAt: string;
@@ -69,6 +70,12 @@ function parseListingAccount(pubkey: PublicKey, data: Buffer): ListingAccount | 
     const price = (BigInt(priceHigh) << 32n) + BigInt(priceLow);
     offset += 8;
 
+    // priceSol (u64 - 8 bytes) - NEW FIELD
+    const priceSolLow = data.readUInt32LE(offset);
+    const priceSolHigh = data.readUInt32LE(offset + 4);
+    const priceSol = (BigInt(priceSolHigh) << 32n) + BigInt(priceSolLow);
+    offset += 8;
+
     // resaleAllowed (bool - 1 byte)
     const resaleAllowed = data.readUInt8(offset) === 1;
     offset += 1;
@@ -93,6 +100,7 @@ function parseListingAccount(pubkey: PublicKey, data: Buffer): ListingAccount | 
       nftMint,
       metadataUri,
       price: price.toString(),
+      priceSol: priceSol.toString(),
       percentageBps,
       durationSeconds: durationSeconds.toString(),
       createdAt: startTimestamp.toString(),
@@ -118,8 +126,8 @@ async function fetchListingsFromChain(): Promise<ListingAccount[]> {
 
   for (const { pubkey, account } of accounts) {
     const parsed = parseListingAccount(pubkey, account.data as Buffer);
-    // Include Active and Sold listings (Sold needed for resale lookups)
-    if (parsed && (parsed.status === 'Active' || parsed.status === 'Sold')) {
+    // Include Active, Sold, and Cancelled listings (for dashboard history)
+    if (parsed && (parsed.status === 'Active' || parsed.status === 'Sold' || parsed.status === 'Cancelled')) {
       listings.push(parsed);
     }
   }

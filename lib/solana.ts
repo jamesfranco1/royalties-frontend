@@ -587,6 +587,10 @@ export async function fetchAllListings(forceRefresh: boolean = false): Promise<a
         const price = data.readBigUInt64LE(offset);
         offset += 8;
         
+        // Parse priceSol (8 bytes) - NEW FIELD
+        const priceSol = data.readBigUInt64LE(offset);
+        offset += 8;
+        
         // Parse resaleAllowed (1 byte)
         const resaleAllowed = data[offset] === 1;
         offset += 1;
@@ -612,6 +616,8 @@ export async function fetchAllListings(forceRefresh: boolean = false): Promise<a
           startTimestamp: Number(startTimestamp),
           price: Number(price),
           priceUsdc: Number(price) / 1_000_000, // Convert to USDC
+          priceSol: Number(priceSol),
+          priceSolDisplay: Number(priceSol) / 1_000_000_000, // Convert lamports to SOL
           resaleAllowed,
           creatorRoyaltyBps,
           creatorRoyalty: creatorRoyaltyBps / 100,
