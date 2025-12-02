@@ -15,6 +15,8 @@ import {
   depositPayout,
   claimPayout,
   listForResale,
+  cancelResale,
+  fetchUserResaleListing,
   useRoyaltiesProgram,
 } from "@/lib/solana";
 import { fetchMetadataFromURI } from "@/lib/api";
@@ -75,6 +77,9 @@ export default function DashboardPage() {
   
   // Cached metadata for https:// URIs
   const [metadataCache, setMetadataCache] = useState<Record<string, { source: string; work: string; imageUrl: string }>>({});
+  
+  // Track active resale listings for owned royalties
+  const [activeResales, setActiveResales] = useState<Record<string, { publicKey: string; priceUsdc: number }>>({});
 
   // Load activities from localStorage
   useEffect(() => {
@@ -188,6 +193,31 @@ export default function DashboardPage() {
       fetchMetadata();
     }
   }, [ownedRoyalties, createdListings]);
+  
+  // Check for active resale listings on owned royalties
+  useEffect(() => {
+    async function checkActiveResales() {
+      if (!publicKey || ownedRoyalties.length === 0) return;
+      
+      const resales: Record<string, { publicKey: string; priceUsdc: number }> = {};
+      
+      for (const royalty of ownedRoyalties) {
+        if (royalty.resaleAllowed) {
+          const resaleListing = await fetchUserResaleListing(publicKey, royalty.publicKey);
+          if (resaleListing) {
+            resales[royalty.publicKey] = {
+              publicKey: resaleListing.publicKey,
+              priceUsdc: resaleListing.priceUsdc,
+            };
+          }
+        }
+      }
+      
+      setActiveResales(resales);
+    }
+    
+    checkActiveResales();
+  }, [publicKey, ownedRoyalties]);
 
   // Handle claim payout
   const handleClaim = async (royalty: OwnedRoyalty) => {
@@ -305,6 +335,53 @@ export default function DashboardPage() {
     const contractData = getContractData(contractRoyalty);
     generateContractPDF(contractData);
     showToast('Contract PDF downloaded!', 'success');
+  };
+
+  // Handle cancel resale listing
+  const handleCancelResale = async (royalty: OwnedRoyalty) => {
+    if (!provider) {
+      showToast("Wallet not connected", "error");
+      return;
+    }
+
+    setIsProcessing(royalty.publicKey);
+    try {
+      const txId = await cancelResale(
+        provider,
+        royalty.publicKey,
+        royalty.nftMint
+      );
+      showToast(`Resale cancelled! TX: ${txId.slice(0, 8)}...`, "success");
+      addActivity({
+        type: 'list_resale',
+        description: `Cancelled resale listing for ${parseUri(royalty.metadataUri).work}`,
+        txId,
+      });
+      
+      // Remove from active resales
+      setActiveResales(prev => {
+        const updated = { ...prev };
+        delete updated[royalty.publicKey];
+        return updated;
+      });
+      
+      // Refresh data
+      if (publicKey) {
+        const owned = await fetchUserOwnedRoyalties(publicKey);
+        const ownedWithPayouts = await Promise.all(
+          owned.map(async (r) => {
+            const payoutPool = await fetchPayoutPool(r.publicKey);
+            return { ...r, payoutPool };
+          })
+        );
+        setOwnedRoyalties(ownedWithPayouts);
+      }
+    } catch (error: any) {
+      console.error("Cancel resale failed:", error);
+      showToast(error.message || "Failed to cancel resale", "error");
+    } finally {
+      setIsProcessing(null);
+    }
   };
 
   // Handle list for resale
@@ -594,7 +671,7 @@ export default function DashboardPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                               </svg>
                               View Contract
-                            </button>
+                  </button>
                             <Link
                               href={`/marketplace/${royalty.publicKey}`}
                               className="w-full py-3 border border-black text-center font-medium hover:bg-black hover:text-white transition-colors"
@@ -602,15 +679,25 @@ export default function DashboardPage() {
                               View Details
                             </Link>
                             {royalty.resaleAllowed && (
-                              <button 
-                                onClick={() => {
-                                  setResaleRoyalty(royalty);
-                                  setShowResaleModal(true);
-                                }}
-                                className="w-full py-3 border border-black font-medium hover:bg-black hover:text-white transition-colors"
-                              >
-                                List for Resale
-                              </button>
+                              activeResales[royalty.publicKey] ? (
+                                <button 
+                                  onClick={() => handleCancelResale(royalty)}
+                                  disabled={isProcessing === royalty.publicKey}
+                                  className="w-full py-3 border border-red-600 text-red-600 font-medium hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50"
+                                >
+                                  {isProcessing === royalty.publicKey ? "Cancelling..." : `Cancel Resale ($${activeResales[royalty.publicKey].priceUsdc.toFixed(2)})`}
+                                </button>
+                              ) : (
+                                <button 
+                                  onClick={() => {
+                                    setResaleRoyalty(royalty);
+                                    setShowResaleModal(true);
+                                  }}
+                                  className="w-full py-3 border border-black font-medium hover:bg-black hover:text-white transition-colors"
+                                >
+                                  List for Resale
+                                </button>
+                              )
                             )}
                           </div>
                         </div>
@@ -928,8 +1015,8 @@ export default function DashboardPage() {
                     >
                       ✕
                     </button>
-                  )}
-                </div>
+              )}
+            </div>
               </div>
 
               <div className="p-6">
@@ -1015,7 +1102,7 @@ export default function DashboardPage() {
                 {/* Header */}
                 <div className="border-b-2 border-black p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div>
+            <div>
                       <h2 className="text-xl font-bold">Digital Royalty Rights Agreement</h2>
                       <p className="text-sm text-black/60">Revenue Participation Certificate</p>
                     </div>
@@ -1024,8 +1111,8 @@ export default function DashboardPage() {
                       className="text-black/60 hover:text-black text-xl"
                     >
                       ✕
-                    </button>
-                  </div>
+              </button>
+            </div>
                   <div className="flex items-center gap-4">
                     {imageUrl ? (
                       <img src={imageUrl} alt={work} className="w-16 h-16 object-cover border border-black" />
@@ -1154,8 +1241,8 @@ export default function DashboardPage() {
                     >
                       View on Solana Explorer
                     </a>
-                  </div>
-                </div>
+          </div>
+        </div>
 
                 {/* Footer Actions */}
                 <div className="border-t-2 border-black p-6 flex gap-4">

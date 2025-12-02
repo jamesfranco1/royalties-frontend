@@ -1318,20 +1318,31 @@ export async function buyResaleListing(
 export async function cancelResale(
   provider: AnchorProvider,
   royaltyListingPubkey: string,
-  nftMint: string,
-  escrowNftPubkey: string
+  nftMint: string
 ) {
   const seller = provider.wallet.publicKey;
   const listingPubkey = new PublicKey(royaltyListingPubkey);
   const nftMintPubkey = new PublicKey(nftMint);
-  const escrowNft = new PublicKey(escrowNftPubkey);
   
   const [resaleListingPda] = getResaleListingPDA(PROGRAM_ID, listingPubkey, seller);
   const sellerNft = getAssociatedTokenAddressSync(nftMintPubkey, seller);
   
+  // Find the escrow account (token account owned by the resale listing PDA)
+  const connection = provider.connection;
+  const tokenAccounts = await connection.getTokenAccountsByOwner(resaleListingPda, {
+    mint: nftMintPubkey,
+  });
+  
+  if (tokenAccounts.value.length === 0) {
+    throw new Error("Escrow account not found");
+  }
+  
+  const escrowNft = tokenAccounts.value[0].pubkey;
+  
   console.log("Cancelling resale...");
   console.log("Seller:", seller.toBase58());
   console.log("Resale Listing:", resaleListingPda.toBase58());
+  console.log("Escrow NFT:", escrowNft.toBase58());
   
   // Discriminator for "cancelResale" = sha256("global:cancel_resale").slice(0, 8)
   const discriminator = Buffer.from([215, 11, 117, 119, 200, 163, 110, 66]);
@@ -1349,7 +1360,6 @@ export async function cancelResale(
     data: discriminator,
   });
   
-  const connection = provider.connection;
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
   
   const tx = new web3.Transaction({
