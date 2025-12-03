@@ -220,7 +220,7 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-xl text-black/60 mb-8"
               >
-                Top creators and traders are building on Royalties.fun. Track performance and discover opportunities.
+                Track creator performance and discover opportunities on the leaderboard.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -283,7 +283,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="text-xl md:text-2xl text-black/60 max-w-2xl mx-auto mb-12"
             >
-              Join thousands of creators and investors already using Royalties.fun to unlock new opportunities.
+              Join creators and investors using royalties.fun to unlock new opportunities.
             </motion.p>
 
             <motion.div

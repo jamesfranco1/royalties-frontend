@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import SectionHeader from "@/components/SectionHeader";
 import ListingCard, { ListingData } from "@/components/ListingCard";
 import { fetchListingsFromAPI, fetchResaleListingsFromAPI, fetchMetadataFromURI } from "@/lib/api";
 
@@ -32,6 +31,17 @@ export default function MarketplacePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [onChainPrimaryListings, setOnChainPrimaryListings] = useState<ListingData[]>([]);
   const [onChainSecondaryListings, setOnChainSecondaryListings] = useState<ListingData[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Count active filters
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filter !== "all") count++;
+    if (priceRange[0] > 0) count++;
+    if (priceRange[1] < 1000000000) count++;
+    if (sortBy !== "newest") count++;
+    return count;
+  }, [filter, priceRange, sortBy]);
 
   // Fetch listings from cached API on mount
   useEffect(() => {
@@ -40,31 +50,20 @@ export default function MarketplacePage() {
       try {
         // Fetch primary listings from API (fresh to bypass any stale cache)
         const allListings = await fetchListingsFromAPI(true);
-        console.log('Raw primary data from API:', allListings);
         
         // Filter to active listings only for display (show all formats)
         const activeListings = allListings.filter(l => 
           l.status === 'Active' && l.metadataUri
         );
-        console.log('Active listings:', activeListings.length);
-        console.log('Active listings details:', activeListings.map(l => ({ 
-          pubkey: l.pubkey.slice(0, 8), 
-          price: l.price, 
-          uri: l.metadataUri?.slice(0, 30),
-          status: l.status
-        })));
         
         // Fetch metadata for each listing (in parallel)
         const formattedPrimary: ListingData[] = await Promise.all(
           activeListings.map(async (l) => {
-            console.log('Fetching metadata for:', l.metadataUri);
             const metadata = await fetchMetadataFromURI(l.metadataUri || '');
-            console.log('Got metadata:', metadata);
             const priceUsdc = Number(l.price) / 1_000_000;
-            const priceSol = l.priceSol ? Number(l.priceSol) / 1_000_000_000 : 0; // Convert lamports to SOL
+            const priceSol = l.priceSol ? Number(l.priceSol) / 1_000_000_000 : 0;
             const durationSeconds = Number(l.durationSeconds);
             
-            // Build display names
             const platformLabel = sourceLabels[metadata.platform] || metadata.platform || 'Unknown';
             const listingName = metadata.name && metadata.name !== 'Untitled' ? metadata.name : '';
             
@@ -87,18 +86,15 @@ export default function MarketplacePage() {
           })
         );
         
-        // Fetch secondary listings from API (fresh to bypass any stale cache)
+        // Fetch secondary listings from API
         const secondaryData = await fetchResaleListingsFromAPI(true);
         
-        // For resale listings, we need to fetch the original listing's metadata
-        // Note: Use ALL listings (not just active) since original might be "Sold"
         const formattedSecondary: ListingData[] = await Promise.all(
           secondaryData
             .filter(l => l.isActive)
             .map(async (l) => {
               const priceUsdc = Number(l.price) / 1_000_000;
               
-              // Try to find the original listing (could be Sold, not just Active)
               const originalListing = allListings.find(p => p.pubkey === l.originalListing);
               let metadata = { name: '', platform: '', imageUrl: '', description: '' };
               let percentage = 0;
@@ -114,7 +110,7 @@ export default function MarketplacePage() {
               
               const platformLabel = sourceLabels[metadata.platform] || metadata.platform || 'Unknown';
               const displayName = metadata.name && metadata.name !== 'Untitled' ? metadata.name : 'Royalty Contract';
-              const priceSol = l.priceSol ? Number(l.priceSol) / 1_000_000_000 : 0; // Convert lamports to SOL
+              const priceSol = l.priceSol ? Number(l.priceSol) / 1_000_000_000 : 0;
               
               return {
                 id: l.pubkey,
@@ -135,13 +131,6 @@ export default function MarketplacePage() {
             })
         );
 
-        console.log('Formatted primary listings:', formattedPrimary.length);
-        console.log('Formatted details:', formattedPrimary.map(l => ({
-          id: l.id.slice(0, 8),
-          name: l.listingName,
-          price: l.price,
-          image: l.imageUrl?.slice(0, 30) || 'none'
-        })));
         setOnChainPrimaryListings(formattedPrimary);
         setOnChainSecondaryListings(formattedSecondary);
       } catch (error) {
@@ -154,7 +143,7 @@ export default function MarketplacePage() {
     loadListings();
   }, []);
 
-  // Raw listings based on market type (real on-chain data only)
+  // Raw listings based on market type
   const rawListings = marketType === "secondary" 
     ? onChainSecondaryListings
     : onChainPrimaryListings;
@@ -162,9 +151,6 @@ export default function MarketplacePage() {
   // Filtered and sorted listings
   const listings = useMemo(() => {
     let result = [...rawListings];
-    console.log('Filtering - start with:', result.length);
-    console.log('Price range:', priceRange);
-    console.log('All prices:', result.map(l => l.price));
 
     // Search filter
     if (searchQuery.trim()) {
@@ -174,7 +160,6 @@ export default function MarketplacePage() {
         l.revenueSource.toLowerCase().includes(query) ||
         l.description?.toLowerCase().includes(query)
       );
-      console.log('After search filter:', result.length);
     }
 
     // Platform filter
@@ -182,15 +167,12 @@ export default function MarketplacePage() {
       result = result.filter(l => 
         l.revenueSource.toLowerCase().includes(filter.toLowerCase())
       );
-      console.log('After platform filter:', result.length);
     }
 
     // Price range filter
-    const beforePriceFilter = result.length;
     result = result.filter(l => 
       l.price >= priceRange[0] && l.price <= priceRange[1]
     );
-    console.log(`After price filter: ${result.length} (removed ${beforePriceFilter - result.length})`);
 
     // Sorting
     switch (sortBy) {
@@ -205,46 +187,64 @@ export default function MarketplacePage() {
         break;
       case "newest":
       default:
-        // Keep original order (newest first from chain)
         break;
     }
 
     return result;
   }, [rawListings, searchQuery, filter, priceRange, sortBy]);
 
+  const clearAllFilters = () => {
+    setFilter('all');
+    setPriceRange([0, 1000000000]);
+    setSortBy('newest');
+    setSearchQuery('');
+  };
+
+  const platformFilters = [
+    { key: "all", label: "All Platforms" },
+    { key: "youtube", label: "YouTube" },
+    { key: "spotify", label: "Spotify" },
+    { key: "twitch", label: "Twitch" },
+    { key: "patreon", label: "Patreon" },
+    { key: "steam", label: "Steam" },
+    { key: "substack", label: "Substack" },
+    { key: "other", label: "Other" },
+  ];
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
       <section className="border-b border-black">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+          {/* Top Row: Title + Market Toggle */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold">Marketplace</h1>
               <p className="text-black/60 text-sm mt-1">Browse and invest in creator royalties</p>
             </div>
 
-          {/* Market Type Toggle */}
+            {/* Market Type Toggle */}
             <div className="flex gap-0 border border-black inline-flex">
-            <button
-              onClick={() => setMarketType("secondary")}
+              <button
+                onClick={() => setMarketType("secondary")}
                 className={`px-6 py-2 font-medium text-sm transition-colors ${
-                marketType === "secondary"
-                  ? "bg-black text-white"
-                  : "bg-white text-black hover:bg-gray-100"
-              }`}
-            >
+                  marketType === "secondary"
+                    ? "bg-black text-white"
+                    : "bg-white text-black hover:bg-gray-100"
+                }`}
+              >
                 Secondary
-            </button>
-            <button
-              onClick={() => setMarketType("primary")}
+              </button>
+              <button
+                onClick={() => setMarketType("primary")}
                 className={`px-6 py-2 font-medium text-sm transition-colors border-l border-black ${
-                marketType === "primary"
-                  ? "bg-black text-white"
-                  : "bg-white text-black hover:bg-gray-100"
-              }`}
-            >
+                  marketType === "primary"
+                    ? "bg-black text-white"
+                    : "bg-white text-black hover:bg-gray-100"
+                }`}
+              >
                 Primary
-            </button>
+              </button>
             </div>
           </div>
           
@@ -265,13 +265,13 @@ export default function MarketplacePage() {
             )}
           </div>
 
-          {/* Search and Sort Row */}
-          <div className="flex flex-col md:flex-row gap-4 mt-8">
+          {/* Search + Filters Button Row */}
+          <div className="flex flex-col sm:flex-row gap-3 mt-6">
             {/* Search */}
             <div className="flex-1 relative">
               <input
                 type="text"
-                placeholder="Search by creator, platform, or description..."
+                placeholder="Search listings..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-3 pl-10 border border-black bg-white text-black placeholder:text-black/40 focus:outline-none focus:ring-2 focus:ring-black"
@@ -294,70 +294,135 @@ export default function MarketplacePage() {
               )}
             </div>
 
-            {/* Sort Dropdown */}
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="px-4 py-3 border border-black bg-white text-black focus:outline-none focus:ring-2 focus:ring-black min-w-[180px]"
+            {/* Filters Toggle Button */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-5 py-3 border font-medium text-sm transition-all flex items-center gap-2 ${
+                showFilters || activeFilterCount > 0
+                  ? "bg-black text-white border-black"
+                  : "bg-white text-black border-black hover:bg-black/5"
+              }`}
             >
-              <option value="newest">Newest First</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="percentage">Highest Percentage</option>
-            </select>
-
-            {/* Price Range */}
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                placeholder="Min $"
-                value={priceRange[0] || ''}
-                onChange={(e) => setPriceRange([Number(e.target.value) || 0, priceRange[1]])}
-                className="w-24 px-3 py-3 border border-black bg-white text-black placeholder:text-black/40 focus:outline-none"
-              />
-              <span className="text-black/40">—</span>
-              <input
-                type="number"
-                placeholder="Max $"
-                value={priceRange[1] === 1000000000 ? '' : priceRange[1]}
-                onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) || 1000000000])}
-                className="w-24 px-3 py-3 border border-black bg-white text-black placeholder:text-black/40 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Platform Filters */}
-          <div className="flex flex-wrap gap-3 mt-6">
-            {[
-              { key: "all", label: "All", icon: "★" },
-              { key: "youtube", label: "YouTube", icon: "▶" },
-              { key: "spotify", label: "Spotify", icon: "♪" },
-              { key: "twitch", label: "Twitch", icon: "◉" },
-              { key: "patreon", label: "Patreon", icon: "P" },
-              { key: "steam", label: "Steam", icon: "⬢" },
-              { key: "substack", label: "Substack", icon: "S" },
-              { key: "other", label: "Other", icon: "…" },
-            ].map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setFilter(f.key)}
-                className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
-                  filter === f.key
-                    ? "bg-black text-white"
-                    : "border border-black/30 text-black/60 hover:border-black hover:text-black"
-                }`}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filters
+              {activeFilterCount > 0 && (
+                <span className={`ml-1 w-5 h-5 text-xs flex items-center justify-center ${
+                  showFilters ? "bg-white text-black" : "bg-black text-white"
+                }`}>
+                  {activeFilterCount}
+                </span>
+              )}
+              <svg 
+                className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
               >
-                <span>{f.icon}</span>
-                {f.label}
-              </button>
-            ))}
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           </div>
+
+          {/* Collapsible Filters Panel */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="pt-6 pb-2 border-t border-black/10 mt-6">
+                  {/* Filter Sections Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Platform Filter */}
+                    <div>
+                      <label className="block text-xs font-medium text-black/50 uppercase tracking-wider mb-3">
+                        Platform
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {platformFilters.map((f) => (
+                          <button
+                            key={f.key}
+                            onClick={() => setFilter(f.key)}
+                            className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                              filter === f.key
+                                ? "bg-black text-white"
+                                : "border border-black/20 text-black/60 hover:border-black hover:text-black"
+                            }`}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Price Range */}
+                    <div>
+                      <label className="block text-xs font-medium text-black/50 uppercase tracking-wider mb-3">
+                        Price Range (USDC)
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          placeholder="Min"
+                          value={priceRange[0] || ''}
+                          onChange={(e) => setPriceRange([Number(e.target.value) || 0, priceRange[1]])}
+                          className="w-full px-3 py-2 border border-black/20 bg-white text-black placeholder:text-black/40 focus:outline-none focus:border-black text-sm"
+                        />
+                        <span className="text-black/30">—</span>
+                        <input
+                          type="number"
+                          placeholder="Max"
+                          value={priceRange[1] === 1000000000 ? '' : priceRange[1]}
+                          onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) || 1000000000])}
+                          className="w-full px-3 py-2 border border-black/20 bg-white text-black placeholder:text-black/40 focus:outline-none focus:border-black text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Sort By */}
+                    <div>
+                      <label className="block text-xs font-medium text-black/50 uppercase tracking-wider mb-3">
+                        Sort By
+                      </label>
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as SortOption)}
+                        className="w-full px-3 py-2 border border-black/20 bg-white text-black focus:outline-none focus:border-black text-sm"
+                      >
+                        <option value="newest">Newest First</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="percentage">Highest Percentage</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Clear Filters */}
+                  {activeFilterCount > 0 && (
+                    <div className="mt-4 pt-4 border-t border-black/10">
+                      <button
+                        onClick={clearAllFilters}
+                        className="text-sm text-black/60 hover:text-black underline"
+                      >
+                        Clear all filters
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
       {/* Listings Grid */}
       <section>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
           {/* Status Bar */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
@@ -381,14 +446,10 @@ export default function MarketplacePage() {
             {/* Results count */}
             {!isLoading && (
               <p className="text-sm text-black/60">
-                {listings.length} {listings.length === 1 ? 'listing' : 'listings'} found
-                {(searchQuery || filter !== 'all' || priceRange[0] > 0 || priceRange[1] < 10000000) && (
+                {listings.length} {listings.length === 1 ? 'listing' : 'listings'}
+                {(searchQuery || activeFilterCount > 0) && (
                   <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setFilter('all');
-                      setPriceRange([0, 10000000]);
-                    }}
+                    onClick={clearAllFilters}
                     className="ml-2 text-black underline hover:no-underline"
                   >
                     Clear filters
@@ -400,15 +461,15 @@ export default function MarketplacePage() {
 
           <AnimatePresence mode="wait">
             {listings.length > 0 ? (
-            <motion.div
+              <motion.div
                 key={`${marketType}-${filter}-${sortBy}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            >
-              {listings.map((listing) => (
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              >
+                {listings.map((listing) => (
                   <motion.div
                     key={listing.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -417,8 +478,8 @@ export default function MarketplacePage() {
                   >
                     <ListingCard listing={listing} />
                   </motion.div>
-              ))}
-            </motion.div>
+                ))}
+              </motion.div>
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -426,7 +487,7 @@ export default function MarketplacePage() {
                 className="py-16 text-center border border-dashed border-black/20"
               >
                 <h3 className="text-xl font-bold mb-2">
-                  {searchQuery || filter !== 'all' || priceRange[0] > 0 || priceRange[1] < 10000000
+                  {searchQuery || activeFilterCount > 0
                     ? "No listings match your filters"
                     : marketType === "primary" 
                       ? "No active listings yet"
@@ -441,13 +502,9 @@ export default function MarketplacePage() {
                       : "Check back later for secondary market listings"
                   }
                 </p>
-                {(searchQuery || filter !== 'all' || priceRange[0] > 0 || priceRange[1] < 10000000) ? (
+                {(searchQuery || activeFilterCount > 0) ? (
                   <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setFilter('all');
-                      setPriceRange([0, 10000000]);
-                    }}
+                    onClick={clearAllFilters}
                     className="px-6 py-2 border border-black font-medium hover:bg-black hover:text-white transition-colors"
                   >
                     Clear Filters
@@ -466,11 +523,11 @@ export default function MarketplacePage() {
 
           {/* Load more */}
           {listings.length >= 8 && (
-          <div className="mt-12 text-center">
-            <button className="px-8 py-4 border-2 border-black font-medium hover:bg-black hover:text-white transition-colors">
-              Load More Listings
-            </button>
-          </div>
+            <div className="mt-12 text-center">
+              <button className="px-8 py-4 border-2 border-black font-medium hover:bg-black hover:text-white transition-colors">
+                Load More Listings
+              </button>
+            </div>
           )}
         </div>
       </section>

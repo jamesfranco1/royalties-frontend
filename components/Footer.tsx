@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
               <PlaceholderCrownLogo size={32} />
-              <span className="text-lg font-bold">Royalties.fun</span>
+              <span className="text-lg font-bold">royalties.fun</span>
             </div>
             <p className="text-sm text-black/60">
               The on-chain marketplace for creator royalties.
@@ -89,7 +89,7 @@ export default function Footer() {
 
         <div className="mt-16 pt-8 border-t border-black/10">
           <p className="text-sm text-black/40">
-            © 2024 Royalties.fun. All rights reserved. Built on Solana.
+            © 2024 royalties.fun. All rights reserved. Built on Solana.
           </p>
         </div>
       </div>

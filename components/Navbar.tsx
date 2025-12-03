@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 
 const navLinks = [
   { href: "/marketplace", label: "Marketplace" },
+  { href: "/companies", label: "Companies", isNew: true },
   { href: "/sell", label: "Sell" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/token", label: "Token" },
@@ -52,13 +53,18 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={`
-                  text-sm font-medium transition-colors
+                  text-sm font-medium transition-colors relative
                   ${pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href)) 
                     ? "text-black" 
                     : "text-black/50 hover:text-black"}
                 `}
               >
                 {link.label}
+                {link.isNew && (
+                  <span className="absolute -top-2 -right-3 text-[9px] font-bold bg-black text-white px-1 py-0.5 leading-none">
+                    NEW
+                  </span>
+                )}
               </Link>
             ))}
           </div>

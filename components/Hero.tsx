@@ -58,7 +58,7 @@ export default function Hero() {
               transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
               className="mt-8 text-xl md:text-2xl text-black/60 max-w-xl"
             >
-              Creators raise capital. Investors trade future revenue.
+              Creators tokenize future revenue. Investors earn passive income. Trade freely on the secondary market.
             </motion.p>
             
             <motion.div
@@ -86,48 +86,6 @@ export default function Hero() {
               >
                 Explore Marketplace
               </Link>
-            </motion.div>
-
-            {/* Stats ticker */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
-              className="mt-16 flex gap-12"
-            >
-              <div>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 1 }}
-                  className="text-3xl font-bold"
-                >
-                  $2.4M+
-                </motion.p>
-                <p className="text-sm text-black/60 mt-1">Total Volume</p>
-              </div>
-              <div>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 1.1 }}
-                  className="text-3xl font-bold"
-                >
-                  312
-                </motion.p>
-                <p className="text-sm text-black/60 mt-1">Active Contracts</p>
-              </div>
-              <div>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 1.2 }}
-                  className="text-3xl font-bold"
-                >
-                  1.2K+
-                </motion.p>
-                <p className="text-sm text-black/60 mt-1">Traders</p>
-              </div>
             </motion.div>
           </div>
         </div>

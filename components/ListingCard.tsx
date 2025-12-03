@@ -63,8 +63,6 @@ export default function ListingCard({ listing }: ListingCardProps) {
     durationSeconds,
     startTimestamp,
     price,
-    priceSol,
-    currency = "USDC",
     isSecondary = false,
     currentOwner,
     imageUrl,
@@ -133,18 +131,13 @@ export default function ListingCard({ listing }: ListingCardProps) {
           )}
         </div>
         {/* Price badge */}
-        <div className="absolute bottom-3 right-3 flex flex-col items-end gap-1">
-          {price > 0 && (
-            <span className="text-sm font-bold bg-white text-black px-3 py-1 shadow-lg">
-              ${price.toLocaleString()} USDC
+        {price > 0 && (
+          <div className="absolute bottom-3 right-3">
+            <span className="text-lg font-bold bg-white/95 text-black px-3 py-1.5 shadow-sm backdrop-blur-sm">
+              ${price.toLocaleString()}
             </span>
-          )}
-          {priceSol && priceSol > 0 && (
-            <span className="text-xs font-medium bg-black/80 text-white px-2 py-0.5">
-              {priceSol.toLocaleString()} SOL
-            </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Content */}
