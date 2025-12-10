@@ -23,7 +23,7 @@
     "@vercel/blob": "^2.0.0",
     "framer-motion": "^11.0.0",
     "jspdf": "^3.0.4",
-    "next": "15.3.2",
+    "next": "15.3.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
