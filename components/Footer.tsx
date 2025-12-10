@@ -48,11 +48,6 @@ export default function Footer() {
             <h4 className="font-bold text-sm mb-4 uppercase tracking-wider">Resources</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/token" className="text-sm text-black/60 hover:text-black transition-colors">
-                  Token
-                </Link>
-              </li>
-              <li>
                 <Link href="/docs" className="text-sm text-black/60 hover:text-black transition-colors">
                   Documentation
                 </Link>
