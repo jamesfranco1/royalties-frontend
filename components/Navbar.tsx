@@ -12,7 +12,6 @@ const navLinks = [
   { href: "/companies", label: "Companies", isNew: true },
   { href: "/sell", label: "Sell" },
   { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/token", label: "Token" },
   { href: "/docs", label: "Docs" },
   { href: "/dashboard", label: "Dashboard" },
 ];
