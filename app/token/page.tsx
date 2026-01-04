@@ -18,7 +18,7 @@ export default function TokenPage() {
           <motion.div {...fadeIn}>
             <h1 className="text-5xl md:text-6xl font-bold mb-6">The Token</h1>
             <p className="text-xl text-white/60 max-w-2xl">
-              Real utility from day one. Value backed by platform performance.
+              Powered by the Bags.fm SDK.
             </p>
           </motion.div>
         </div>
@@ -41,83 +41,168 @@ export default function TokenPage() {
         </div>
       </section>
 
-      {/* Live Utility */}
+      {/* Bags SDK Integration */}
       <section className="border-b border-black bg-gray-50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20">
           <motion.div {...fadeIn}>
             <div className="flex items-center gap-4 mb-4">
-              <h2 className="text-3xl font-bold">Token Utility</h2>
-              <span className="px-3 py-1 bg-black text-white text-sm font-medium">LIVE AT LAUNCH</span>
+              <h2 className="text-3xl font-bold">Bags.fm SDK Integration</h2>
             </div>
             <p className="text-black/60 mb-12 max-w-2xl">
-              These mechanics are active from day one, creating immediate value linkage between platform success and token demand.
+              Our token is built on the Bags.fm SDK, enabling powerful automated mechanics that drive value to holders. 
+              Automated buybacks are triggered from both transaction fees and platform profits.
             </p>
+            <div className="mb-8">
+              <a 
+                href="https://github.com/jamesdfranco/royalties" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                View Implementation
+              </a>
+            </div>
             
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Buybacks */}
+            <div className="grid lg:grid-cols-3 gap-8">
+              {/* Dividends Bot */}
               <div className="border border-black p-8 bg-white">
-                <h3 className="text-2xl font-bold mb-4">3× Automated Buybacks</h3>
-                <p className="text-black/70 mb-6">
-                  The platform buys back <span className="font-bold">3× the platform&apos;s profit</span> from each transaction.
-                </p>
-                
-                <div className="bg-gray-50 border border-black/10 p-6 mb-6">
-                  <p className="text-sm text-black/60 mb-2">Example</p>
-                  <p className="text-lg">
-                    If the platform earns <span className="font-bold">1 USDC</span> in revenue, 
-                    it automatically purchases <span className="font-bold">3 USDC</span> worth of the token.
-                  </p>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-2xl font-bold">Dividends Bot</h3>
+                  <span className="text-3xl font-bold text-black/20">10%</span>
                 </div>
+                <p className="text-black/70 mb-6">
+                  10% of all transaction fees are allocated to the dividends bot, distributing rewards directly to token holders.
+                </p>
                 
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <span className="w-1.5 h-1.5 bg-black mt-2 flex-shrink-0" />
-                    <span>Constant buy pressure on every transaction</span>
+                    <span>Automatic holder rewards</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="w-1.5 h-1.5 bg-black mt-2 flex-shrink-0" />
-                    <span>Direct linkage between platform success and token demand</span>
+                    <span>Passive income for holding</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="w-1.5 h-1.5 bg-black mt-2 flex-shrink-0" />
-                    <span>Value distribution to all holders</span>
+                    <span>Powered by Bags SDK</span>
                   </li>
                 </ul>
-                
-                <p className="text-sm text-black/50 mt-6 pt-6 border-t border-black/10">
-                  Implemented via server-side listener that monitors transactions, calculates revenue, and executes automated purchases.
-                </p>
               </div>
 
-              {/* Burns */}
+              {/* AMM Bot */}
               <div className="border border-black p-8 bg-white">
-                <h3 className="text-2xl font-bold mb-4">Automatic Burns</h3>
-                <p className="text-black/70 mb-6">
-                  All tokens purchased via the 3× buyback are sent to the <span className="font-bold">Sol Incinerator</span> address, permanently removing them from supply.
-                </p>
-                
-                <div className="bg-black text-white p-6 mb-6 font-mono text-sm break-all">
-                  1nc1nerator11111111111111111111111111111111
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-2xl font-bold">AMM Bot</h3>
+                  <span className="text-3xl font-bold text-black/20">10%</span>
                 </div>
+                <p className="text-black/70 mb-6">
+                  10% of all transaction fees power the AMM bot, maintaining deep liquidity and stable trading conditions.
+                </p>
                 
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <span className="w-1.5 h-1.5 bg-black mt-2 flex-shrink-0" />
-                    <span>Deflationary supply mechanics</span>
+                    <span>Deep liquidity provision</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="w-1.5 h-1.5 bg-black mt-2 flex-shrink-0" />
-                    <span>Long-term scarcity guaranteed</span>
+                    <span>Reduced price volatility</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="w-1.5 h-1.5 bg-black mt-2 flex-shrink-0" />
-                    <span>Transparent and on-chain verification</span>
+                    <span>Smooth trading experience</span>
                   </li>
                 </ul>
-                
-                <p className="text-sm text-black/50 mt-6 pt-6 border-t border-black/10">
-                  Every burn transaction is publicly verifiable on Solana explorers.
+              </div>
+
+              {/* Buybacks & Burns */}
+              <div className="border border-black p-8 bg-white">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-2xl font-bold">Buybacks & Burns</h3>
+                  <span className="text-3xl font-bold text-black/20">80%</span>
+                </div>
+                <p className="text-black/70 mb-6">
+                  The remaining 80% is dedicated to aggressive buybacks and burns, driving market cap growth.
                 </p>
+                
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3">
+                    <span className="w-1.5 h-1.5 bg-black mt-2 flex-shrink-0" />
+                    <span>Deflationary mechanics</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="w-1.5 h-1.5 bg-black mt-2 flex-shrink-0" />
+                    <span>Continuous buy pressure</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="w-1.5 h-1.5 bg-black mt-2 flex-shrink-0" />
+                    <span>Market cap inflation</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* 100K Challenge */}
+      <section className="border-b border-black">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20">
+          <motion.div {...fadeIn}>
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div>
+                <h2 className="text-3xl font-bold mb-6">The 100K Challenge</h2>
+                <p className="text-black/70 text-lg mb-6">
+                  Our goal is to become the largest token on Bags.fm. Why? Because Bags distributes <span className="font-bold">$100,000 to holders</span> of the top token on the platform.
+                </p>
+                <p className="text-black/70 mb-8">
+                  With 80% of fees going to buybacks and burns, we&apos;re aggressively positioning ourselves to capture this prize for our community.
+                </p>
+                
+                <div className="bg-black text-white p-6">
+                  <p className="text-sm text-white/60 mb-2">Target</p>
+                  <p className="text-3xl font-bold mb-2">#1 on Bags.fm</p>
+                  <p className="text-white/60">Largest market cap = $100K distribution to holders</p>
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="border border-black p-6">
+                  <div className="text-sm text-black/50 mb-2">Allocation Breakdown</div>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="font-medium">Buybacks & Burns</span>
+                        <span className="font-bold">80%</span>
+                      </div>
+                      <div className="h-3 bg-gray-200">
+                        <div className="h-full bg-black" style={{ width: "80%" }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="font-medium">Dividends Bot</span>
+                        <span className="font-bold">10%</span>
+                      </div>
+                      <div className="h-3 bg-gray-200">
+                        <div className="h-full bg-black" style={{ width: "10%" }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="font-medium">AMM Bot</span>
+                        <span className="font-bold">10%</span>
+                      </div>
+                      <div className="h-3 bg-gray-200">
+                        <div className="h-full bg-black" style={{ width: "10%" }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -125,12 +210,11 @@ export default function TokenPage() {
       </section>
 
       {/* Future Utility */}
-      <section className="border-b border-black">
+      <section className="border-b border-black bg-gray-50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20">
           <motion.div {...fadeIn}>
             <div className="flex items-center gap-4 mb-4">
               <h2 className="text-3xl font-bold">Future Utility</h2>
-              <span className="px-3 py-1 border border-black text-sm font-medium">ROADMAP</span>
             </div>
             <p className="text-black/60 mb-12 max-w-2xl">
               Additional utilities introduced as the platform matures.
@@ -138,7 +222,7 @@ export default function TokenPage() {
             
             <div className="grid md:grid-cols-3 gap-6">
               {/* Reduced Fees */}
-              <div className="border border-black p-6">
+              <div className="border border-black p-6 bg-white">
                 <h3 className="text-lg font-bold mb-3">Reduced Marketplace Fees</h3>
                 <p className="text-black/60 text-sm mb-4">
                   Token holders receive reduced fees on primary and secondary market transactions.
@@ -160,7 +244,7 @@ export default function TokenPage() {
               </div>
 
               {/* Priority Boost */}
-              <div className="border border-black p-6">
+              <div className="border border-black p-6 bg-white">
                 <h3 className="text-lg font-bold mb-3">Priority Boost for Creators</h3>
                 <p className="text-black/60 text-sm mb-4">
                   Creators can pay fees in the token to receive enhanced visibility.
@@ -189,21 +273,20 @@ export default function TokenPage() {
         </div>
       </section>
 
-
-      {/* Onboarding Incentives */}
-      <section className="border-b border-black bg-gray-50">
+      {/* Onboarding */}
+      <section className="border-b border-black">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20">
           <motion.div {...fadeIn}>
-            <h2 className="text-3xl font-bold mb-4">Creator Onboarding Incentives</h2>
+            <h2 className="text-3xl font-bold mb-4">Onboarding</h2>
             <p className="text-black/60 mb-12 max-w-2xl">
-              Using PumpFun developer fees to protect and incentivize early creators.
+              Using developer fees to protect and incentivize early creators.
             </p>
             
             <div className="grid lg:grid-cols-2 gap-8">
               <div>
                 <h3 className="text-xl font-bold mb-4">How It Works</h3>
                 <p className="text-black/70 mb-6">
-                  When the token launches on PumpFun, the developer wallet receives a fee from every trade. 
+                  When the token launches, the developer wallet receives a fee from every trade. 
                   These earnings are allocated to a creator protection fund.
                 </p>
                 
@@ -212,7 +295,7 @@ export default function TokenPage() {
                     <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
                     <div>
                       <p className="font-medium">Fund Creation</p>
-                      <p className="text-sm text-black/60">PumpFun dev fees accumulate in protection fund</p>
+                      <p className="text-sm text-black/60">Dev fees accumulate in protection fund</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -256,38 +339,21 @@ export default function TokenPage() {
       </section>
 
       {/* Docs Link */}
-      <section className="border-b border-black">
+      <section className="bg-black text-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
           <motion.div {...fadeIn} className="flex flex-col md:flex-row items-center justify-between gap-8">
             <div>
               <h3 className="text-2xl font-bold mb-2">Full Documentation</h3>
-              <p className="text-black/60">
+              <p className="text-white/60">
                 Fee structure, trading mechanics, NFT mechanics, contract legality, and more.
               </p>
             </div>
             <Link
               href="/docs"
-              className="px-8 py-4 bg-black text-white font-medium hover:bg-black/80 transition-colors whitespace-nowrap"
+              className="px-8 py-4 bg-white text-black font-medium hover:bg-white/90 transition-colors whitespace-nowrap"
             >
               Read the Docs
             </Link>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Compliance Disclaimer */}
-      <section className="bg-black text-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-          <motion.div {...fadeIn} className="max-w-3xl">
-            <h2 className="text-xl font-bold mb-4">Disclaimer</h2>
-            <p className="text-white/60 leading-relaxed">
-              The token described on this page is designed for platform utility purposes only. 
-              It is not marketed, sold, or offered as an investment vehicle. The token&apos;s 
-              primary function is to enable specific features within the platform ecosystem, 
-              including but not limited to fee reductions, reputation boosting, and governance 
-              participation. Nothing on this page constitutes financial advice or an offer 
-              to sell securities.
-            </p>
           </motion.div>
         </div>
       </section>

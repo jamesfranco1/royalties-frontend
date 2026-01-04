@@ -1,5 +1,5 @@
 import Link from "next/link";
-import PlaceholderCrownLogo from "./PlaceholderCrownLogo";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -9,7 +9,13 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
-              <PlaceholderCrownLogo size={32} />
+              <Image 
+                src="/newlogo.jpg" 
+                alt="royalties.fun logo" 
+                width={32} 
+                height={32}
+                className="rounded"
+              />
               <span className="text-lg font-bold">royalties.fun</span>
             </div>
             <p className="text-sm text-black/60">
@@ -80,12 +86,6 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-        </div>
-
-        <div className="mt-16 pt-8 border-t border-black/10">
-          <p className="text-sm text-black/40">
-            © 2024 royalties.fun. All rights reserved. Built on Solana.
-          </p>
         </div>
       </div>
     </footer>

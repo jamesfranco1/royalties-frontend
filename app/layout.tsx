@@ -22,6 +22,11 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "royalties.fun",
   description: "Buy and sell creator royalties on-chain. Creators raise capital. Investors trade future revenue.",
+  icons: {
+    icon: "/newlogo.jpg",
+    shortcut: "/newlogo.jpg",
+    apple: "/newlogo.jpg",
+  },
 };
 
 export default function RootLayout({

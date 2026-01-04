@@ -308,15 +308,6 @@ export default function CompaniesPage() {
                 ))}
               </div>
 
-              {/* Floating label */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={heroInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.6, delay: 1.5 }}
-                className="absolute top-10 right-0 border border-black px-4 py-2 bg-white"
-              >
-                <span className="text-sm font-medium">Revenue-Based Financing</span>
-              </motion.div>
             </motion.div>
           </div>
         </div>
