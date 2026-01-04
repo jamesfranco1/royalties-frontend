@@ -106,6 +106,3 @@ Uses `@solana/wallet-adapter-react` for wallet connections. Supports Phantom, So
 | `/api/metadata` | GET | Fetch listing metadata from URI |
 | `/api/upload` | POST | Upload listing image to Vercel Blob |
 
-## License
-
-MIT
