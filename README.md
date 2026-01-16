@@ -1,5 +1,4 @@
 # royalties.fun
-Gc4TLguqN5g7y6D9ut3CXRyPhLPMTLtZzhrvYMy2BAGS
 
 A decentralized marketplace for trading creator royalty contracts on Solana.
 
