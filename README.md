@@ -1,4 +1,4 @@
-# royalties.fun
+# Accural
 
 A decentralized marketplace for trading creator royalty contracts on Solana.
 
